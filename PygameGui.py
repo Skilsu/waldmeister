@@ -613,7 +613,8 @@ class PygameWaldmeisterGUI:
             self.screen.blit(text_surface, text_rect)
 
         if self.winner is not None:
-            pygame.draw.rect(self.screen, (50, 50, 50), (self.window_width / 3, self.window_height / 3, self.window_width / 3, self.window_height / 3))
+            pygame.draw.rect(self.screen, (50, 50, 50), (
+                self.window_width / 3, self.window_height / 3, self.window_width / 3, self.window_height / 3))
             if self.color_scheme:
                 p0 = "Color"
             else:
@@ -625,11 +626,11 @@ class PygameWaldmeisterGUI:
 
             message = ""
             if self.winner == 0:
-               message = "Player " + p0 + " has won with " + str(self.game.count_points(0)) + " Points!"
+                message = "Player " + p0 + " has won with " + str(self.game.count_points(0)) + " Points!"
             elif self.winner == 1:
-               message = "Player " + p1 + " has won with " + str(self.game.count_points(1)) + " Points!"
+                message = "Player " + p1 + " has won with " + str(self.game.count_points(1)) + " Points!"
             elif self.winner == -1:
-               message = "It's a draw with " + self.game.count_points(0) + " Points!"
+                message = "It's a draw with " + self.game.count_points(0) + " Points!"
 
             text_surface_big = self.font_large.render(message, True, (150, 150, 150))
             text_rect_big = text_surface_big.get_rect()
@@ -637,7 +638,8 @@ class PygameWaldmeisterGUI:
             text_rect_width_big = max(text_rect_big.width + 100, self.window_width / 3)
 
             pygame.draw.rect(self.screen, (50, 50, 50), (
-            self.window_width / 2 - text_rect_width_big / 2, self.window_height / 2 - text_rect_height_big / 2, text_rect_width_big, text_rect_height_big))
+                self.window_width / 2 - text_rect_width_big / 2, self.window_height / 2 - text_rect_height_big / 2,
+                text_rect_width_big, text_rect_height_big))
 
             text_rect_big.center = (self.window_width / 2, self.window_height / 2)
             self.screen.blit(text_surface_big, text_rect_big)
@@ -756,6 +758,5 @@ class PygameWaldmeisterGUI:
 
 if __name__ == "__main__":
     game = WaldmeisterGame()
-    # game.player = [[[2,2,2], [2,2,2],[2,2,2]],[[2,2,2], [2,2,2],[2,2,2]]]  -> to test ending
     gui = PygameWaldmeisterGUI(game)
     gui.run_game()

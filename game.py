@@ -1,9 +1,3 @@
-class Figures:
-    def __init__(self, height, color):
-        self.height = height
-        self.color = color
-
-
 class WaldmeisterGame:
 
     def __init__(self):
@@ -111,10 +105,9 @@ class WaldmeisterGame:
                 row.append(self._get_reward_board([i, j]))
             boards.append(row)
 
-        added_board = []
         if player_number == 0:
             added_board = boards[0][layer]
-            for i in range(1,3):
+            for i in range(1, 3):
                 for jdx, j in enumerate(boards[i][layer]):
                     for kdx, k in enumerate(j):
                         if k == 1:
@@ -134,7 +127,11 @@ class WaldmeisterGame:
         for kdx, k in enumerate(board):
             for ldx, l in enumerate(k):
                 if l == 1:
-                    evaluated_board, board = self.evaluate_board(board, [kdx, ldx])
+                    evaluated_board = self.evaluate_board(board, [kdx, ldx])
+                    for idx, i in enumerate(board):
+                        for jdx, _ in enumerate(i):
+                            if evaluated_board[idx][jdx] == 1:
+                                board[idx][jdx] = 0
                     boards.append(evaluated_board)
         '''
         # might not be needed???????
@@ -149,28 +146,31 @@ class WaldmeisterGame:
         return boards
 
     def evaluate_board(self, board, position):
-        board_copy = [row[:] for row in board]
         evaluated_board = []
-        board[position[0]][position[1]] = 0
-        for i in range(8):
-            evaluated_row = []
-            for j in range(8):
-                if [i, j] != position and board_copy[i][j] == 1 and (
-                        (i > 0 and board_copy[i - 1][j] == 1) or
-                        (i < 7 and board_copy[i + 1][j] == 1) or
-                        (j > 0 and board_copy[i][j - 1] == 1) or
-                        (j < 7 and board_copy[i][j + 1] == 1) or
-                        (i > 0 and 7 > j and board_copy[i - 1][j + 1] == 1)):
-                    board[i][j] = 0
-                    evaluated_row.append(1)
-                else:
-                    if [i, j] != position:
-                        board_copy[i][j] = 0
-                        evaluated_row.append(0)
-                    else:
+        found_pattern = [[0 for _ in range(8)] for _ in range(8)]
+        evaluated_pattern = [[0 for _ in range(8)] for _ in range(8)]
+        evaluated_pattern[position[0]][position[1]] = 1
+        while found_pattern != evaluated_pattern:
+            evaluated_board = []
+            found_pattern = [row[:] for row in evaluated_pattern]
+            for i in range(8):
+                evaluated_row = []
+                for j in range(8):
+                    if [i, j] != position and board[i][j] == 1 and (
+                            (i > 0 and evaluated_pattern[i - 1][j] == 1) or
+                            (i < 7 and evaluated_pattern[i + 1][j] == 1) or
+                            (j > 0 and evaluated_pattern[i][j - 1] == 1) or
+                            (j < 7 and evaluated_pattern[i][j + 1] == 1) or
+                            (i > 0 and 7 > j and evaluated_pattern[i - 1][j + 1] == 1)):
                         evaluated_row.append(1)
-            evaluated_board.append(evaluated_row)
-        return evaluated_board, board
+                    else:
+                        if [i, j] != position:
+                            evaluated_row.append(0)
+                        else:
+                            evaluated_row.append(1)
+                evaluated_board.append(evaluated_row)
+            evaluated_pattern = [row[:] for row in evaluated_board]
+        return evaluated_board
 
     def _get_reward_board(self, symbol):
         counted_points = []
@@ -188,10 +188,20 @@ class WaldmeisterGame:
 if __name__ == "__main__":
     game = WaldmeisterGame()
     game.print_board()
-    game.field[1][2] = [0, 0]
-    game.field[2][1] = [0, 0]
-    game.field[3][0] = [0, 0]
-    for i in game.field:
-        print(i)
-    print(game.count_points(0))
-
+    game.player = [[[2, 2, 2], [2, 2, 2], [2, 2, 2]], [[2, 2, 2], [2, 2, 2], [2, 2, 2]]]  # -> to test ending
+    game.field[0][6] = [0, 0]
+    game.field[1][4] = [0, 0]
+    game.field[2][3] = [1, 1]
+    game.field[2][4] = [1, 0]
+    game.field[3][2] = [1, 2]
+    game.field[3][4] = [1, 2]
+    game.field[4][2] = [2, 2]
+    game.field[4][3] = [0, 2]
+    game.field[4][4] = [2, 2]
+    game.field[5][1] = [0, 1]
+    game.field[5][2] = [0, 2]
+    game.field[5][3] = [1, 1]
+    game.field[6][1] = [1, 0]
+    game.field[6][2] = [2, 0]
+    game.print_board()
+    print(game.count_points(1))
