@@ -188,20 +188,3 @@ class WaldmeisterGame:
 if __name__ == "__main__":
     game = WaldmeisterGame()
     game.print_board()
-    game.player = [[[2, 2, 2], [2, 2, 2], [2, 2, 2]], [[2, 2, 2], [2, 2, 2], [2, 2, 2]]]  # -> to test ending
-    game.field[0][6] = [0, 0]
-    game.field[1][4] = [0, 0]
-    game.field[2][3] = [1, 1]
-    game.field[2][4] = [1, 0]
-    game.field[3][2] = [1, 2]
-    game.field[3][4] = [1, 2]
-    game.field[4][2] = [2, 2]
-    game.field[4][3] = [0, 2]
-    game.field[4][4] = [2, 2]
-    game.field[5][1] = [0, 1]
-    game.field[5][2] = [0, 2]
-    game.field[5][3] = [1, 1]
-    game.field[6][1] = [1, 0]
-    game.field[6][2] = [2, 0]
-    game.print_board()
-    print(game.count_points(1))
