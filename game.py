@@ -1,3 +1,55 @@
+def evaluate_board(board, position):
+    evaluated_board = []
+    found_pattern = [[0 for _ in range(8)] for _ in range(8)]
+    evaluated_pattern = [[0 for _ in range(8)] for _ in range(8)]
+    evaluated_pattern[position[0]][position[1]] = 1
+    while found_pattern != evaluated_pattern:
+        evaluated_board = []
+        found_pattern = [row[:] for row in evaluated_pattern]
+        for i in range(8):
+            evaluated_row = []
+            for j in range(8):
+                if [i, j] != position and board[i][j] == 1 and (
+                        (i > 0 and evaluated_pattern[i - 1][j] == 1) or
+                        (i < 7 and evaluated_pattern[i + 1][j] == 1) or
+                        (j > 0 and evaluated_pattern[i][j - 1] == 1) or
+                        (j < 7 and evaluated_pattern[i][j + 1] == 1) or
+                        (i > 0 and 7 > j and evaluated_pattern[i - 1][j + 1] == 1)):
+                    evaluated_row.append(1)
+                else:
+                    if [i, j] != position:
+                        evaluated_row.append(0)
+                    else:
+                        evaluated_row.append(1)
+            evaluated_board.append(evaluated_row)
+        evaluated_pattern = [row[:] for row in evaluated_board]
+    return evaluated_board
+
+
+def evaluate_boards(board):
+    boards = []
+    for kdx, k in enumerate(board):
+        for ldx, l in enumerate(k):
+            if l == 1:
+                evaluated_board = evaluate_board(board, [kdx, ldx])
+                for idx, i in enumerate(board):
+                    for jdx, _ in enumerate(i):
+                        if evaluated_board[idx][jdx] == 1:
+                            board[idx][jdx] = 0
+                boards.append(evaluated_board)
+    '''
+    # might not be needed???????
+    unique_boards = set()
+    for board in boards:
+        # Convert the board to a tuple since lists are not hashable and cannot be added to a set
+        board_tuple = tuple(map(tuple, board))
+        unique_boards.add(board_tuple)
+    # Convert the unique boards back to a list of lists
+    boards = [list(board_tuple) for board_tuple in unique_boards]
+    '''
+    return boards
+
+
 class WaldmeisterGame:
 
     def __init__(self):
@@ -120,57 +172,7 @@ class WaldmeisterGame:
                         if k == 1:
                             added_board[jdx][kdx] = 1
 
-        return self.evaluate_boards(added_board)
-
-    def evaluate_boards(self, board):
-        boards = []
-        for kdx, k in enumerate(board):
-            for ldx, l in enumerate(k):
-                if l == 1:
-                    evaluated_board = self.evaluate_board(board, [kdx, ldx])
-                    for idx, i in enumerate(board):
-                        for jdx, _ in enumerate(i):
-                            if evaluated_board[idx][jdx] == 1:
-                                board[idx][jdx] = 0
-                    boards.append(evaluated_board)
-        '''
-        # might not be needed???????
-        unique_boards = set()
-        for board in boards:
-            # Convert the board to a tuple since lists are not hashable and cannot be added to a set
-            board_tuple = tuple(map(tuple, board))
-            unique_boards.add(board_tuple)
-        # Convert the unique boards back to a list of lists
-        boards = [list(board_tuple) for board_tuple in unique_boards]
-        '''
-        return boards
-
-    def evaluate_board(self, board, position):
-        evaluated_board = []
-        found_pattern = [[0 for _ in range(8)] for _ in range(8)]
-        evaluated_pattern = [[0 for _ in range(8)] for _ in range(8)]
-        evaluated_pattern[position[0]][position[1]] = 1
-        while found_pattern != evaluated_pattern:
-            evaluated_board = []
-            found_pattern = [row[:] for row in evaluated_pattern]
-            for i in range(8):
-                evaluated_row = []
-                for j in range(8):
-                    if [i, j] != position and board[i][j] == 1 and (
-                            (i > 0 and evaluated_pattern[i - 1][j] == 1) or
-                            (i < 7 and evaluated_pattern[i + 1][j] == 1) or
-                            (j > 0 and evaluated_pattern[i][j - 1] == 1) or
-                            (j < 7 and evaluated_pattern[i][j + 1] == 1) or
-                            (i > 0 and 7 > j and evaluated_pattern[i - 1][j + 1] == 1)):
-                        evaluated_row.append(1)
-                    else:
-                        if [i, j] != position:
-                            evaluated_row.append(0)
-                        else:
-                            evaluated_row.append(1)
-                evaluated_board.append(evaluated_row)
-            evaluated_pattern = [row[:] for row in evaluated_board]
-        return evaluated_board
+        return evaluate_boards(added_board)
 
     def _get_reward_board(self, symbol):
         counted_points = []
