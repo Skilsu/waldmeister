@@ -1,3 +1,4 @@
+from Game import Game
 def evaluate_board(board, position):
     evaluated_board = []
     found_pattern = [[0 for _ in range(8)] for _ in range(8)]
@@ -50,9 +51,37 @@ def evaluate_boards(board):
     return boards
 
 
-class WaldmeisterGame:
+class WaldmeisterGame(Game):
+
+    def getInitBoard(self):
+        return super().getInitBoard()
+
+    def getBoardSize(self):
+        return super().getBoardSize()
+
+    def getActionSize(self):
+        return super().getActionSize()
+
+    def getNextState(self, board, player, action):
+        return super().getNextState(board, player, action)
+
+    def getValidMoves(self, board, player):
+        return super().getValidMoves(board, player)
+
+    def getGameEnded(self, board, player):
+        return super().getGameEnded(board, player)
+
+    def getCanonicalForm(self, board, player):
+        return super().getCanonicalForm(board, player)
+
+    def getSymmetries(self, board, pi):
+        return super().getSymmetries(board, pi)
+
+    def stringRepresentation(self, board):
+        return super().stringRepresentation(board)
 
     def __init__(self):
+        super().__init__()
         self.player = [[[0 for _ in range(3)] for _ in range(3)] for _ in range(2)]
         self.field = [[None for _ in range(8)] for _ in range(8)]
         self.active_start = None
