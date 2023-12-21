@@ -1,4 +1,8 @@
+import numpy as np
+
 from Game import Game
+
+
 def evaluate_board(board, position):
     evaluated_board = []
     found_pattern = [[0 for _ in range(8)] for _ in range(8)]
@@ -54,16 +58,28 @@ def evaluate_boards(board):
 class WaldmeisterGame(Game):
 
     def getInitBoard(self):
-        return super().getInitBoard()
+        return_field = []
+        for i in self.field:
+            for _ in i:
+                return_field.append(0)
+        return np.array(return_field)
 
     def getBoardSize(self):
-        return super().getBoardSize()
+        return (self.board_size, self.board_size)
 
     def getActionSize(self):
-        return super().getActionSize()
+        return self.board_size*self.board_size*2 + self.color_amount*self.color_amount + 1  # no plus 1???
 
     def getNextState(self, board, player, action):
-        return super().getNextState(board, player, action)
+
+        if action == self.board_size*self.board_size*2 + self.color_amount*self.color_amount:
+            return (board, -player)
+        board = d
+        b = Board(self.n)
+        b.pieces = np.copy(board)
+        move = (int(action / self.n), action % self.n)
+        b.execute_move(move, player)
+        return (b.pieces, -player)
 
     def getValidMoves(self, board, player):
         return super().getValidMoves(board, player)
@@ -80,10 +96,12 @@ class WaldmeisterGame(Game):
     def stringRepresentation(self, board):
         return super().stringRepresentation(board)
 
-    def __init__(self):
+    def __init__(self, board_size=8, color_amount=3):
         super().__init__()
-        self.player = [[[0 for _ in range(3)] for _ in range(3)] for _ in range(2)]
-        self.field = [[None for _ in range(8)] for _ in range(8)]
+        self.board_size = board_size
+        self.color_amount = color_amount
+        self.player = [[[0 for _ in range(color_amount)] for _ in range(color_amount)] for _ in range(2)]
+        self.field = [[None for _ in range(board_size)] for _ in range(board_size)]
         self.active_start = None
         self.active_end = None
         self.empty_board = True
@@ -121,12 +139,6 @@ class WaldmeisterGame(Game):
         # add figure to played figures
         self.player[self.active_player][figure[0]][figure[1]] += 1
 
-        # change active player for next move
-        if self.active_player == 1:
-            self.active_player = 0
-        else:
-            self.active_player = 1
-
         # add figure to board (first round)
         if self.empty_board and self.field[starting_from[0]][starting_from[1]] is None:
             self.empty_board = False
@@ -137,6 +149,12 @@ class WaldmeisterGame(Game):
               and self.field[starting_from[0]][starting_from[1]] is not None):
             self.field[moving_to[0]][moving_to[1]] = self.field[starting_from[0]][starting_from[1]]
             self.field[starting_from[0]][starting_from[1]] = figure
+
+        # change active player for next move
+        if self.active_player == 1:
+            self.active_player = 0
+        else:
+            self.active_player = 1
 
     def reset_game(self):
         self.player = [[[0 for _ in range(3)] for _ in range(3)] for _ in range(2)]
