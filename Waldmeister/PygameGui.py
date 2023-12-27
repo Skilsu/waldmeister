@@ -2,7 +2,7 @@ import math
 
 import pygame
 
-from WaldmeisterGame import WaldmeisterGame
+from WaldmeisterGameAlt import WaldmeisterGame
 
 
 class PygameWaldmeisterGUI:
@@ -624,6 +624,7 @@ class PygameWaldmeisterGUI:
             else:
                 p1 = "Height"
 
+
             message = ""
             if self.winner == 0:
                 message = "Player " + p0 + " has won with " + str(self.game.count_points(0)) + " Points!"
@@ -740,6 +741,8 @@ class PygameWaldmeisterGUI:
             self.game.active_start = None
             self.game.active_end = None
             self.chosen_color = [None for _ in range(3)]
+
+        self.game.print_board()
 
     def action(self, position):
         if self.game.active_start and self.active_positions[position[0]][position[1]]:

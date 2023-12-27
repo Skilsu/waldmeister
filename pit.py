@@ -1,9 +1,7 @@
 import Arena
-from MCTS import MCTS
-from tictactoe.TicTacToeGame import TicTacToeGame
-from tictactoe.TicTacToePlayers import *
-from tictactoe.keras.NNet import NNetWrapper as NNet
 
+from Waldmeister.WaldmeisterGame import WaldmeisterGame
+from Waldmeister.WaldmeisterPlayers import *
 
 import numpy as np
 from utils import *
@@ -13,22 +11,25 @@ use this script to play any two agents against each other, or play manually with
 any agent.
 """
 
-mini_othello = False  # Play in 6x6 instead of the normal 8x8.
+"""mini_othello = False  # Play in 6x6 instead of the normal 8x8.
 human_vs_cpu = True
 
 if mini_othello:
     g = OthelloGame(6)
 else:
-    g = TicTacToeGame()
+    g = TicTacToeGame()"""
+
+g = WaldmeisterGame()
 
 # all players
-rp = RandomPlayer(g).play
+#rp = RandomPlayer(g).play
 #gp = GreedyOthelloPlayer(g).play
-hp = HumanTicTacToePlayer(g).play
+hp = HumanWaldmeisterPlayer(g).play
+hp2 = HumanWaldmeisterPlayer(g).play
 
 
 
-# nnet players
+"""# nnet players
 n1 = NNet(g)
 if mini_othello:
     n1.load_checkpoint('./pretrained_models/othello/pytorch/','6x100x25_best.pth.tar')
@@ -48,7 +49,7 @@ else:
     n2p = lambda x: np.argmax(mcts2.getActionProb(x, temp=0))
 
     player2 = n2p  # Player 2 is neural network if it's cpu vs cpu.
-
-arena = Arena.Arena(n1p, player2, g, display=TicTacToeGame.display)
+"""
+arena = Arena.Arena(hp, hp2, g, display=WaldmeisterGame.display)
 
 print(arena.playGames(2, verbose=True))
