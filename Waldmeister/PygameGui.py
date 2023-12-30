@@ -49,73 +49,54 @@ class PygameWaldmeisterGUI:
         self.screen = pygame.display.set_mode((self.window_width, self.window_height), pygame.RESIZABLE)
         self.draw_board()
 
-    def symbol_toggle(self):
+    def _toggle(self, x, y, name_1, name_2, value):
         pygame.draw.line(self.screen, (255, 255, 255),
-                         (self.window_width - 75, 49),
-                         (self.window_width - 100, 49),
+                         (x - 75, y + 49),
+                         (x - 100, y + 49),
                          20)
         pygame.draw.circle(self.screen, (255, 255, 255),
-                           (self.window_width - 75, 50), 10)
+                           (x - 75, y + 50), 10)
         pygame.draw.circle(self.screen, (255, 255, 255),
-                           (self.window_width - 100, 50), 10)
+                           (x - 100, y + 50), 10)
+
         pygame.draw.line(self.screen, (0, 0, 0),
-                         (self.window_width - 75, 49),
-                         (self.window_width - 100, 49),
+                         (x - 75, y + 49),
+                         (x - 100, y + 49),
                          18)
         pygame.draw.circle(self.screen, (0, 0, 0),
-                           (self.window_width - 75, 50), 9)
+                           (x - 75, y + 50), 9)
         pygame.draw.circle(self.screen, (0, 0, 0),
-                           (self.window_width - 100, 50), 9)
+                           (x - 100, y + 50), 9)
 
-        if self.symbol:
-            text_surface = self.font.render("Symbols", True, (255, 255, 255))
+        if value:
+            text_surface = self.font.render(name_1, True, (255, 255, 255))
 
             pygame.draw.circle(self.screen, (255, 255, 255),
-                               (self.window_width - 100, 50), 15)
+                               (x - 100, y + 50), 15)
         else:
-            text_surface = self.font.render("Sticks", True, (255, 255, 255))
+            text_surface = self.font.render(name_2, True, (255, 255, 255))
             pygame.draw.circle(self.screen, (255, 255, 255),
-                               (self.window_width - 75, 50), 15)
+                               (x - 75, y + 50), 15)
 
         text_rect = text_surface.get_rect()
-        text_rect.center = (self.window_width - 88, 90)
+        text_rect.center = (x - 88, y + 90)
         self.screen.blit(text_surface, text_rect)
+
+    def symbol_toggle(self):
+        self._toggle(self.window_width, 0, "Sticks", "Symbols", not self.symbol)  # not bc aesthetics
 
     def color_toggle(self):
-        pygame.draw.line(self.screen, (255, 255, 255),
-                         (self.window_width - 75, 149),
-                         (self.window_width - 100, 149),
-                         20)
-        pygame.draw.circle(self.screen, (255, 255, 255),
-                           (self.window_width - 75, 150), 10)
-        pygame.draw.circle(self.screen, (255, 255, 255),
-                           (self.window_width - 100, 150), 10)
-        pygame.draw.line(self.screen, (0, 0, 0),
-                         (self.window_width - 75, 149),
-                         (self.window_width - 100, 149),
-                         18)
-        pygame.draw.circle(self.screen, (0, 0, 0),
-                           (self.window_width - 75, 150), 9)
-        pygame.draw.circle(self.screen, (0, 0, 0),
-                           (self.window_width - 100, 150), 9)
+        self._toggle(self.window_width, 100, "Default", "Colored", self.color_scheme)
 
-        if self.color_scheme:
-            text_surface = self.font.render("Default", True, (255, 255, 255))
-            pygame.draw.circle(self.screen, (255, 255, 255),
-                               (self.window_width - 75, 150), 15)
-        else:
-            text_surface = self.font.render("Colored", True, (255, 255, 255))
-            pygame.draw.circle(self.screen, (255, 255, 255),
-                               (self.window_width - 100, 150), 15)
-
-        text_rect = text_surface.get_rect()
-        text_rect.center = (self.window_width - 88, 190)
-        self.screen.blit(text_surface, text_rect)
+    def ai_toggle(self):
+        #  TODO implement Ai game
+        self._toggle(175, 0, "Human", "Ai", True)
 
     def draw_board(self):
         self.screen.fill((0, 0, 0))
         self.symbol_toggle()
         self.color_toggle()
+        self.ai_toggle()
 
         edge_vertical = self.field_height / 14
         edge_horizontal = self.field_width / 14
