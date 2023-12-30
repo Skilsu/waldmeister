@@ -2,7 +2,7 @@ import math
 
 import pygame
 
-from WaldmeisterGame import WaldmeisterGame
+from WaldmeisterLogic import WaldmeisterLogic
 
 
 class PygameWaldmeisterGUI:
@@ -31,7 +31,6 @@ class PygameWaldmeisterGUI:
         self.symbol = False
         self.color_scheme = True
         self.running = True
-        self.active_positions = [[0 for _ in range(8)] for _ in range(8)]
         self.chosen_color = [None for _ in range(3)]
         self.winner = None
 
@@ -113,71 +112,6 @@ class PygameWaldmeisterGUI:
         text_rect.center = (self.window_width - 88, 190)
         self.screen.blit(text_surface, text_rect)
 
-    def get_active_positions(self):
-        # find active positions to draw allowed lines
-        active_positions = []
-        for i in range(8):
-            active_row = []
-            for j in range(8):
-                if self.game.active_start and (i == self.game.active_start[0]
-                                               or j == self.game.active_start[1]
-                                               or self.game.active_start[1] + self.game.active_start[0] == i + j):
-                    active_row.append(1)
-                else:
-                    active_row.append(0)
-            active_positions.append(active_row)
-
-        if self.game.active_start:
-            x = self.game.active_start[0]
-            toggle = False
-            while x > 0:
-                x -= 1
-                if self.game.field[x][self.game.active_start[1]] is not None or toggle:
-                    toggle = True
-                    active_positions[x][self.game.active_start[1]] = 0
-            x = self.game.active_start[0]
-            toggle = False
-            while x < 7:
-                x += 1
-                if self.game.field[x][self.game.active_start[1]] is not None or toggle:
-                    toggle = True
-                    active_positions[x][self.game.active_start[1]] = 0
-            y = self.game.active_start[1]
-            toggle = False
-            while y > 0:
-                y -= 1
-                if self.game.field[self.game.active_start[0]][y] is not None or toggle:
-                    toggle = True
-                    active_positions[self.game.active_start[0]][y] = 0
-            y = self.game.active_start[1]
-            toggle = False
-            while y < 7:
-                y += 1
-                if self.game.field[self.game.active_start[0]][y] is not None or toggle:
-                    toggle = True
-                    active_positions[self.game.active_start[0]][y] = 0
-
-            x = self.game.active_start[0]
-            y = self.game.active_start[1]
-            toggle = False
-            while y > 0 and x < 7:
-                y -= 1
-                x += 1
-                if self.game.field[x][y] is not None or toggle:
-                    toggle = True
-                    active_positions[x][y] = 0
-            x = self.game.active_start[0]
-            y = self.game.active_start[1]
-            toggle = False
-            while y < 7 and x > 0:
-                y += 1
-                x -= 1
-                if self.game.field[x][y] is not None or toggle:
-                    toggle = True
-                    active_positions[x][y] = 0
-
-        self.active_positions = active_positions
-
     def draw_board(self):
         self.screen.fill((0, 0, 0))
         self.symbol_toggle()
@@ -194,7 +128,7 @@ class PygameWaldmeisterGUI:
                              (self.start_diff + self.field_width + edge_horizontal,
                               self.top_diff + self.field_height / 2)])
 
-        self.get_active_positions()
+        self.game.get_active_positions()
 
         # draw lines and dots
         x = -4
@@ -216,7 +150,7 @@ class PygameWaldmeisterGUI:
                         pygame.draw.line(self.screen, (0, 0, 0),
                                          (x_diamond, y_diamond),
                                          (x_diamond, y_diamond + (self.field_height / 7)), radius + 2)
-                        if self.active_positions[int(x)][int(y)] == 1 and self.active_positions[int(x + 1)][
+                        if self.game.active_positions[int(x)][int(y)] == 1 and self.game.active_positions[int(x + 1)][
                             int(y - 1)] == 1 and self.game.active_start[1] + self.game.active_start[0] == int(
                             x) + int(y):
                             pygame.draw.line(self.screen, (25, 150, 50),
@@ -232,7 +166,7 @@ class PygameWaldmeisterGUI:
                                          (x_diamond, y_diamond),
                                          (x_diamond + self.field_width / 14, y_diamond + (self.field_height / 14)),
                                          radius + 2)
-                        if self.active_positions[int(x)][int(y)] == 1 and self.active_positions[int(x + 1)][
+                        if self.game.active_positions[int(x)][int(y)] == 1 and self.game.active_positions[int(x + 1)][
                             int(y)] == 1 and self.game.active_start[1] == int(y):
                             pygame.draw.line(self.screen, (25, 150, 50),
                                              (x_diamond, y_diamond),
@@ -249,7 +183,7 @@ class PygameWaldmeisterGUI:
                                          (x_diamond, y_diamond),
                                          (x_diamond - self.field_width / 14, y_diamond + (self.field_height / 14)),
                                          radius + 2)
-                        if self.active_positions[int(x)][int(y)] == 1 and self.active_positions[int(x)][
+                        if self.game.active_positions[int(x)][int(y)] == 1 and self.game.active_positions[int(x)][
                             int(y - 1)] == 1 and self.game.active_start[0] == int(x):
                             pygame.draw.line(self.screen, (25, 150, 50),
                                              (x_diamond, y_diamond),
@@ -742,7 +676,7 @@ class PygameWaldmeisterGUI:
             self.chosen_color = [None for _ in range(3)]
 
     def action(self, position):
-        if self.game.active_start and self.active_positions[position[0]][position[1]]:
+        if self.game.active_start and self.game.active_positions[position[0]][position[1]]:
             self.game.active_end = position
         elif self.game.field[position[0]][position[1]] is None and self.game.empty_board:
             self.game.active_end = position
@@ -757,6 +691,6 @@ class PygameWaldmeisterGUI:
 
 
 if __name__ == "__main__":
-    game = WaldmeisterGame()
+    game = WaldmeisterLogic()
     gui = PygameWaldmeisterGUI(game)
     gui.run_game()
