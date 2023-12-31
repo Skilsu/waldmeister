@@ -9,21 +9,18 @@ class WaldmeisterLogic:
 
     def __init__(self, board_size=8, color_amount=3):
         super().__init__()
-        self.active_positions = [[0 for _ in range(8)] for _ in range(8)]
         self.board_size = board_size
         self.color_amount = color_amount
         self.player = [[[0 for _ in range(color_amount)] for _ in range(color_amount)] for _ in range(2)]
         self.field = [[None for _ in range(board_size)] for _ in range(board_size)]
-        self.active_start = None
-        self.active_end = None
         self.empty_board = True
-        self.active_player = 0  # can be 0 or 1 to access over self.player
+        self.active_player = -1  # can be -1 or 1 to access over self.player
 
     # add [][] indexer syntax to the Board
     def __getitem__(self, index):
         return self.field[index]
 
-    def print_board(self):
+    def print_board(self, active_position=None):
         x = -4
         y = 3
         for i in range(15):
@@ -34,9 +31,9 @@ class WaldmeisterLogic:
                 x += 0.5
                 y += 0.5
                 if 0 <= x < 8 and 0 <= y < 8 and y == int(y) and x == int(x):
-                    if self.active_start and (x == self.active_start[0]
-                                              or y == self.active_start[1]
-                                              or self.active_start[1] + self.active_start[0] == x + y):
+                    if active_position is not None and (x == active_position[0]
+                                                        or y == active_position[1]
+                                                        or active_position[1] + active_position[0] == x + y):
                         line_str = line_str + str("Nein")
                     else:
                         line_str = line_str + str(self.field[int(x)][int(y)])
@@ -47,13 +44,18 @@ class WaldmeisterLogic:
             y = old_y - 0.5
 
     def make_move(self, starting_from, moving_to, figure):
+        # handle player position
+        if self.active_player == -1:
+            player = 0
+        else:
+            player = 1
 
         # Validate if passed figure is still available for player
-        if self.player[self.active_player][figure[0]][figure[1]] >= 3:
+        if self.player[player][figure[0]][figure[1]] >= 3:
             return
 
         # add figure to played figures
-        self.player[self.active_player][figure[0]][figure[1]] += 1
+        self.player[player][figure[0]][figure[1]] += 1
 
         # add figure to board (first round)
         if self.empty_board and self.field[starting_from[0]][starting_from[1]] is None:
@@ -68,74 +70,75 @@ class WaldmeisterLogic:
 
         # change active player for next move
         if self.active_player == 1:
-            self.active_player = 0
+            self.active_player = -1
         else:
             self.active_player = 1
 
-    def get_active_positions(self):
-        # find active positions to draw allowed lines
+    def get_active_positions(self, active_position):
+        """
+        find active positions to draw allowed lines
+        """
         active_positions = []
         for i in range(8):
             active_row = []
             for j in range(8):
-                if self.active_start and (i == self.active_start[0]
-                                          or j == self.active_start[1]
-                                          or self.active_start[1] + self.active_start[0] == i + j):
+                if (i == active_position[0]
+                        or j == active_position[1]
+                        or active_position[1] + active_position[0] == i + j):
                     active_row.append(1)
                 else:
                     active_row.append(0)
             active_positions.append(active_row)
 
-        if self.active_start:
-            x = self.active_start[0]
-            toggle = False
-            while x > 0:
-                x -= 1
-                if self.field[x][self.active_start[1]] is not None or toggle:
-                    toggle = True
-                    active_positions[x][self.active_start[1]] = 0
-            x = self.active_start[0]
-            toggle = False
-            while x < 7:
-                x += 1
-                if self.field[x][self.active_start[1]] is not None or toggle:
-                    toggle = True
-                    active_positions[x][self.active_start[1]] = 0
-            y = self.active_start[1]
-            toggle = False
-            while y > 0:
-                y -= 1
-                if self.field[self.active_start[0]][y] is not None or toggle:
-                    toggle = True
-                    active_positions[self.active_start[0]][y] = 0
-            y = self.active_start[1]
-            toggle = False
-            while y < 7:
-                y += 1
-                if self.field[self.active_start[0]][y] is not None or toggle:
-                    toggle = True
-                    active_positions[self.active_start[0]][y] = 0
+        x = active_position[0]
+        toggle = False
+        while x > 0:
+            x -= 1
+            if self.field[x][active_position[1]] is not None or toggle:
+                toggle = True
+                active_positions[x][active_position[1]] = 0
+        x = active_position[0]
+        toggle = False
+        while x < 7:
+            x += 1
+            if self.field[x][active_position[1]] is not None or toggle:
+                toggle = True
+                active_positions[x][active_position[1]] = 0
+        y = active_position[1]
+        toggle = False
+        while y > 0:
+            y -= 1
+            if self.field[active_position[0]][y] is not None or toggle:
+                toggle = True
+                active_positions[active_position[0]][y] = 0
+        y = active_position[1]
+        toggle = False
+        while y < 7:
+            y += 1
+            if self.field[active_position[0]][y] is not None or toggle:
+                toggle = True
+                active_positions[active_position[0]][y] = 0
 
-            x = self.active_start[0]
-            y = self.active_start[1]
-            toggle = False
-            while y > 0 and x < 7:
-                y -= 1
-                x += 1
-                if self.field[x][y] is not None or toggle:
-                    toggle = True
-                    active_positions[x][y] = 0
-            x = self.active_start[0]
-            y = self.active_start[1]
-            toggle = False
-            while y < 7 and x > 0:
-                y += 1
-                x -= 1
-                if self.field[x][y] is not None or toggle:
-                    toggle = True
-                    active_positions[x][y] = 0
+        x = active_position[0]
+        y = active_position[1]
+        toggle = False
+        while y > 0 and x < 7:
+            y -= 1
+            x += 1
+            if self.field[x][y] is not None or toggle:
+                toggle = True
+                active_positions[x][y] = 0
+        x = active_position[0]
+        y = active_position[1]
+        toggle = False
+        while y < 7 and x > 0:
+            y += 1
+            x -= 1
+            if self.field[x][y] is not None or toggle:
+                toggle = True
+                active_positions[x][y] = 0
 
-        self.active_positions = active_positions
+        return active_positions
 
     def winner(self):
         for i in self.player:
