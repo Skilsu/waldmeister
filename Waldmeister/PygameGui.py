@@ -92,6 +92,109 @@ class PygameWaldmeisterGUI:
         #  TODO implement Ai game
         self._toggle(175, 0, "Human", "Ai", True)
 
+    def draw_symbol(self, symbol, x_diamond, y_diamond, radius, hight_multiplier, chosen_color):
+        a, b, c = 0, 0, 0
+        for kdx in range(3):
+            if kdx == symbol[1]:
+                if self.color_scheme:
+                    if symbol[1] == 0:  # olive (dark green)
+                        b = 2
+                    elif symbol[1] == 1:  # green
+                        b = 7
+                    else:  # yellow
+                        a = 7
+                        b = 7
+                else:
+                    if symbol[1] == 0:  # red
+                        a = 7
+                    elif symbol[1] == 1:  # green
+                        b = 7
+                    else:  # blue
+                        b = 2
+                        c = 7
+        '''
+        # shadow (not quite convincing)
+        for k in range(10 + 10 * self.game.field[int(x)][int(y)][0]):
+            pygame.draw.circle(self.screen, (k * 6, k * 4, 0),
+                               (x_diamond + k * 1, y_diamond - k * 1), radius)
+        '''
+        if self.symbol:
+            if symbol[0] == 0:
+                if chosen_color:
+                    pygame.draw.circle(self.screen, (255, 255, 255), (x_diamond, y_diamond),
+                                       radius * 1.5 + 2)  # white circle
+                else:
+                    pygame.draw.circle(self.screen, (0, 0, 0), (x_diamond, y_diamond),
+                                       radius * 1.5 + 1)  # black circle
+                pygame.draw.circle(self.screen, (a * 35, b * 35, c * 35), (x_diamond, y_diamond),
+                                   radius * 1.5)  # circle
+            elif symbol[0] == 1:
+                if chosen_color:
+                    pygame.draw.rect(self.screen, (255, 255, 255),
+                                     (x_diamond - radius * 1.4 - 2, y_diamond - radius * 1.4 - 2,
+                                      radius * 2.8 + 4, radius * 2.8 + 4))  # white square
+                else:
+                    pygame.draw.rect(self.screen, (0, 0, 0),
+                                     (x_diamond - radius * 1.4 - 1, y_diamond - radius * 1.4 - 1,
+                                      radius * 2.8 + 2, radius * 2.8 + 2))  # black square
+                pygame.draw.rect(self.screen, (a * 35, b * 35, c * 35),
+                                 (x_diamond - radius * 1.4, y_diamond - radius * 1.4,
+                                  radius * 2.8, radius * 2.8))  # colored square
+            else:
+                height_triangle = math.sqrt(3) * radius * 2
+
+                # Calculate the coordinates of the three corners
+                x1 = x_diamond
+                y1 = y_diamond - height_triangle / 2 - radius / 2
+
+                x2 = x_diamond - radius * 2
+                y2 = y_diamond + height_triangle / 2 - radius / 2
+
+                x3 = x_diamond + radius * 2
+                y3 = y_diamond + height_triangle / 2 - radius / 2
+                if chosen_color:
+                    pygame.draw.polygon(self.screen, (255, 255, 255),
+                                        [(x1, y1 - 4), (x2 - 3, y2 + 2),
+                                         (x3 + 3, y3 + 2)])  # white triangle
+                else:
+                    pygame.draw.polygon(self.screen, (0, 0, 0),
+                                        [(x1, y1 - 2), (x2 - 1.5, y2 + 1),
+                                         (x3 + 1.5, y3 + 1)])  # black triangle
+                pygame.draw.polygon(self.screen, (a * 35, b * 35, c * 35),
+                                    [(x1, y1), (x2, y2), (x3, y3)])  # colored triangle
+
+        else:
+            # background stick
+            for l in range(10 + 10 * symbol[0]):
+                if chosen_color:
+                    pygame.draw.circle(self.screen, (255, 255, 255),
+                                       (x_diamond + l * 1 * hight_multiplier,
+                                        y_diamond - l * 2 * hight_multiplier), radius + 2)  # white stick
+                else:
+                    pygame.draw.circle(self.screen, (0, 0, 0),
+                                       (x_diamond + l * 1 * hight_multiplier,
+                                        y_diamond - l * 2 * hight_multiplier), radius + 1)  # black stick
+
+            # sticks with different color and height
+            for l in range(10 + 10 * symbol[0]):
+                load = l / (10 + 10 * symbol[0])
+                if l == 10 + 10 * symbol[0] - 1:
+                    if chosen_color:
+                        pygame.draw.circle(self.screen, (255, 255, 255),
+                                           (x_diamond + l * 1 * hight_multiplier,
+                                            y_diamond - l * 2 * hight_multiplier),
+                                           radius + 2)  # white top circle
+                    else:
+                        pygame.draw.circle(self.screen, (0, 0, 0),
+                                           (x_diamond + l * 1 * hight_multiplier,
+                                            y_diamond - l * 2 * hight_multiplier),
+                                           radius + 1)  # black top circle
+                pygame.draw.circle(self.screen, (int(10 * a + load * a * 25),
+                                                 int(10 * b + load * b * 25),
+                                                 int(10 * c + load * c * 25)),
+                                   (x_diamond + l * 1 * hight_multiplier,
+                                    y_diamond - l * 2 * hight_multiplier), radius)
+
     def draw_board(self):
         self.screen.fill((0, 0, 0))
         self.symbol_toggle()
@@ -191,83 +294,9 @@ class PygameWaldmeisterGUI:
                                         Rect(x_diamond - radius, y_diamond - radius, radius * 2, radius * 2))
                     '''
 
-                    # sticks depending on height and color
                     if self.game.field[int(x)][int(y)] is not None:
-                        a, b, c = 0, 0, 0
-                        for kdx in range(3):
-                            if kdx == self.game.field[int(x)][int(y)][1]:
-                                if self.color_scheme:
-                                    if self.game.field[int(x)][int(y)][1] == 0:  # olive (dark green)
-                                        b = 2
-                                    elif self.game.field[int(x)][int(y)][1] == 1:  # green
-                                        b = 7
-                                    else:  # yellow
-                                        a = 7
-                                        b = 7
-                                else:
-                                    if self.game.field[int(x)][int(y)][1] == 0:  # red
-                                        a = 7
-                                    elif self.game.field[int(x)][int(y)][1] == 1:  # green
-                                        b = 7
-                                    else:  # blue
-                                        b = 2
-                                        c = 7
-                        '''
-                        # shadow (not quite convincing)
-                        for k in range(10 + 10 * self.game.field[int(x)][int(y)][0]):
-                            pygame.draw.circle(self.screen, (k * 6, k * 4, 0),
-                                               (x_diamond + k * 1, y_diamond - k * 1), radius)
-                        '''
-                        if self.symbol:
-                            if self.game.field[int(x)][int(y)][0] == 0:
-                                pygame.draw.circle(self.screen, (0, 0, 0), (x_diamond, y_diamond),
-                                                   radius * 1.5 + 1)  # black circle
-                                pygame.draw.circle(self.screen, (a * 35, b * 35, c * 35), (x_diamond, y_diamond),
-                                                   radius * 1.5)  # circle
-                            elif self.game.field[int(x)][int(y)][0] == 1:
-                                pygame.draw.rect(self.screen, (0, 0, 0),
-                                                 (x_diamond - radius * 1.4 - 1, y_diamond - radius * 1.4 - 1,
-                                                  radius * 2.8 + 2, radius * 2.8 + 2))  # black square
-                                pygame.draw.rect(self.screen, (a * 35, b * 35, c * 35),
-                                                 (x_diamond - radius * 1.4, y_diamond - radius * 1.4,
-                                                  radius * 2.8, radius * 2.8))  # colored square
-                            else:
-                                height = math.sqrt(3) * radius * 2
-
-                                # Calculate the coordinates of the three corners
-                                x1 = x_diamond
-                                y1 = y_diamond - height / 2 - radius / 2
-
-                                x2 = x_diamond - radius * 2
-                                y2 = y_diamond + height / 2 - radius / 2
-
-                                x3 = x_diamond + radius * 2
-                                y3 = y_diamond + height / 2 - radius / 2
-                                pygame.draw.polygon(self.screen, (0, 0, 0),
-                                                    [(x1, y1 - 2), (x2 - 1.5, y2 + 1),
-                                                     (x3 + 1.5, y3 + 1)])  # black triangle
-                                pygame.draw.polygon(self.screen, (a * 35, b * 35, c * 35),
-                                                    [(x1, y1), (x2, y2), (x3, y3)])  # colored triangle
-
-                        else:
-                            # black background stick
-                            for k in range(10 + 10 * self.game.field[int(x)][int(y)][0]):
-                                pygame.draw.circle(self.screen, (0, 0, 0),
-                                                   (x_diamond + k * 1 * hight_multiplier,
-                                                    y_diamond - k * 2 * hight_multiplier), radius + 1)
-
-                            # sticks with different color and height
-                            for k in range(10 + 10 * self.game.field[int(x)][int(y)][0]):
-                                load = k / (10 + 10 * self.game.field[int(x)][int(y)][0])
-                                if k == 10 + 10 * self.game.field[int(x)][int(y)][0] - 1:
-                                    pygame.draw.circle(self.screen, (0, 0, 0),
-                                                       (x_diamond + k * 1 * hight_multiplier,
-                                                        y_diamond - k * 2 * hight_multiplier), radius + 1)
-                                pygame.draw.circle(self.screen, (int(10 * a + load * a * 25),
-                                                                 int(10 * b + load * b * 25),
-                                                                 int(10 * c + load * c * 25)),
-                                                   (x_diamond + k * 1 * hight_multiplier,
-                                                    y_diamond - k * 2 * hight_multiplier), radius)
+                        self.draw_symbol(self.game.field[int(x)][int(y)], x_diamond, y_diamond, radius,
+                                         hight_multiplier, False)
             x = old_x + 0.5
             y = old_y - 0.5
 
@@ -396,6 +425,8 @@ class PygameWaldmeisterGUI:
 
                     x_pos = x + (0.5 + idx) * width / 4
                     y_pos = y + (0.5 + jdx) * height / 4
+
+                    # rect behind symbols/sticks
                     if not self.symbol:
                         if self.chosen_color == [pdx, idx, jdx]:
                             pygame.draw.rect(self.screen, (255, 255, 255),
@@ -409,6 +440,7 @@ class PygameWaldmeisterGUI:
                         pygame.draw.rect(self.screen, (a * 15, b * 15, c * 15),
                                          (x_pos, y_pos, width / 6, height / 4))
 
+                    # adjusting pos of current stick/symbol
                     for k in range(3 - j):
                         if k == 0:
                             x_pos = x + (0.7 + idx) * width / 4 + width / 16
@@ -419,82 +451,9 @@ class PygameWaldmeisterGUI:
                         else:
                             x_pos = x + (0.7 + idx) * width / 4 + width / 16
                             y_pos = y + (1 + jdx) * height / 4 + height / 16
-                        if self.symbol:
-                            if idx == 0:
-                                if self.chosen_color == [pdx, idx, jdx]:
-                                    pygame.draw.circle(self.screen, (255, 255, 255), (x_pos, y_pos),
-                                                       radius * 1.5 + 2)  # white circle
-                                else:
-                                    pygame.draw.circle(self.screen, (0, 0, 0), (x_pos, y_pos),
-                                                       radius * 1.5 + 1)  # black circle
-                                pygame.draw.circle(self.screen, (a * 35, b * 35, c * 35), (x_pos, y_pos),
-                                                   radius * 1.5)  # circle
-                            elif idx == 1:
-                                if self.chosen_color == [pdx, idx, jdx]:
-                                    pygame.draw.rect(self.screen, (255, 255, 255),
-                                                     (x_pos - radius * 1.4 - 2, y_pos - radius * 1.4 - 2,
-                                                      radius * 2.8 + 4, radius * 2.8 + 4))  # white square
-                                else:
-                                    pygame.draw.rect(self.screen, (0, 0, 0),
-                                                     (x_pos - radius * 1.4 - 1, y_pos - radius * 1.4 - 1,
-                                                      radius * 2.8 + 2, radius * 2.8 + 2))  # black square
-                                pygame.draw.rect(self.screen, (a * 35, b * 35, c * 35),
-                                                 (x_pos - radius * 1.4, y_pos - radius * 1.4,
-                                                  radius * 2.8, radius * 2.8))  # colored square
-                            else:
-                                height_triangle = math.sqrt(3) * radius * 2
 
-                                # Calculate the coordinates of the three corners
-                                x1 = x_pos
-                                y1 = y_pos - height_triangle / 2 - radius / 2
-
-                                x2 = x_pos - radius * 2
-                                y2 = y_pos + height_triangle / 2 - radius / 2
-
-                                x3 = x_pos + radius * 2
-                                y3 = y_pos + height_triangle / 2 - radius / 2
-                                if self.chosen_color == [pdx, idx, jdx]:
-                                    pygame.draw.polygon(self.screen, (255, 255, 255),
-                                                        [(x1, y1 - 4), (x2 - 3, y2 + 2),
-                                                         (x3 + 3, y3 + 2)])  # white triangle
-                                else:
-                                    pygame.draw.polygon(self.screen, (0, 0, 0),
-                                                        [(x1, y1 - 2), (x2 - 1.5, y2 + 1),
-                                                         (x3 + 1.5, y3 + 1)])  # black triangle
-                                pygame.draw.polygon(self.screen, (a * 35, b * 35, c * 35),
-                                                    [(x1, y1), (x2, y2), (x3, y3)])  # colored triangle
-
-                        else:
-                            # background stick
-                            for l in range(10 + 10 * idx):
-                                if self.chosen_color == [pdx, idx, jdx]:
-                                    pygame.draw.circle(self.screen, (255, 255, 255),
-                                                       (x_pos + l * 1 * hight_multiplier,
-                                                        y_pos - l * 2 * hight_multiplier), radius + 2)  # white stick
-                                else:
-                                    pygame.draw.circle(self.screen, (0, 0, 0),
-                                                       (x_pos + l * 1 * hight_multiplier,
-                                                        y_pos - l * 2 * hight_multiplier), radius + 1)  # black stick
-
-                            # sticks with different color and height
-                            for l in range(10 + 10 * idx):
-                                load = l / (10 + 10 * idx)
-                                if l == 10 + 10 * idx - 1:
-                                    if self.chosen_color == [pdx, idx, jdx]:
-                                        pygame.draw.circle(self.screen, (255, 255, 255),
-                                                           (x_pos + l * 1 * hight_multiplier,
-                                                            y_pos - l * 2 * hight_multiplier),
-                                                           radius + 2)  # white top circle
-                                    else:
-                                        pygame.draw.circle(self.screen, (0, 0, 0),
-                                                           (x_pos + l * 1 * hight_multiplier,
-                                                            y_pos - l * 2 * hight_multiplier),
-                                                           radius + 1)  # black top circle
-                                pygame.draw.circle(self.screen, (int(10 * a + load * a * 25),
-                                                                 int(10 * b + load * b * 25),
-                                                                 int(10 * c + load * c * 25)),
-                                                   (x_pos + l * 1 * hight_multiplier,
-                                                    y_pos - l * 2 * hight_multiplier), radius)
+                        chosen_color = bool(self.chosen_color == [pdx, idx, jdx])
+                        self.draw_symbol([idx, jdx], x_pos, y_pos, radius, hight_multiplier, chosen_color)
 
             x = self.window_width - width - edge * 0.5
             y = self.window_height - self.bottom_diff + edge
