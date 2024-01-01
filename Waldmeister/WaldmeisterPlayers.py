@@ -27,8 +27,30 @@ class HumanWaldmeisterPlayer():
 
     def play(self, board):
         # display(board)
-        valid = self.game.getValidMoves(board, 1)
-        for i in range(len(valid)):
+        moves, moves_binary = self.game.getValidMovesHuman(board, 1)
+
+        for i in range(len(moves)):
+            move = moves[i]
+
+            if self.game.empty_board:
+                print("|{}: Place Piece: {}, At: {}|".format(i, move[0], move[1]))
+            else:
+                print("|{}: Place Piece: {}, Move Piece: {}, From: {}, To: {}|".format(i, move[0], move[1], move[2], move[3]))
+
+        valid_move = False
+        while not valid_move:
+            input_move = int(input("\nPlease enter a move number: "))
+
+            if 0 <= input_move < len(moves):
+                valid_move = True
+            else:
+                print("Sorry, that move is not valid. Please enter another.")
+
+        return input_move
+
+
+
+        """for i in range(len(valid)):
             if valid[i]:
                 print(int(i/self.game.n), int(i%self.game.n))
         while True:
@@ -44,4 +66,4 @@ class HumanWaldmeisterPlayer():
             else:
                 print('Invalid')
 
-        return a
+        return a"""

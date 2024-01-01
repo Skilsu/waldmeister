@@ -42,11 +42,25 @@ class WaldmeisterGame(Game):
         #b.execute_move(move, player)
         #return (b.pieces, -player)
 
-    def getValidMoves(self, board, player):
-        valids = [0]*self.getActionSize()
+    def getValidMovesHuman(self, board, player):
+        #valids = [0]*self.getActionSize()
         b = Board(self.n)
         b.pieces = np.copy(board)
-        legalMoves = b.get_legal_moves(player)
+
+        moves, moves_binary = b.get_legal_moves(self.empty_board, self.game_pieces_players, player)
+
+        return moves, moves_binary
+
+    def getValidMoves(self, board, player):
+        b = Board(self.n)
+        b.pieces = np.copy(board)
+
+        moves =  b.get_legal_moves(self.empty_board, self.game_pieces_players, player)[1]
+
+        # erste zug vorbei
+        self.empty_board = False
+
+        return moves
 
     def getGameEnded(self, board, player):
         # return 0 if not ended, 1 if player 1 won, -1 if player 1 lost
