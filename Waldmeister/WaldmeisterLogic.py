@@ -17,7 +17,8 @@ class WaldmeisterLogic:
             raise e
         while color_amount * 18 > board_size ** 2:
             color_amount -= 1
-            print(f"WARNING: color_amount needed to be adjusted from {color_amount + 1} to {color_amount} bc it was too high!")
+            print(f"WARNING: color_amount needed to be adjusted from {color_amount + 1} to {color_amount} bc it was "
+                  f"too high!")
         self.board_size = board_size
         self.color_amount = color_amount
         self.player = [[[0 for _ in range(3)] for _ in range(3)] for _ in range(2)]
