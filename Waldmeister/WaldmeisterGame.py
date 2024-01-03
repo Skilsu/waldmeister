@@ -1,27 +1,39 @@
 import numpy as np
 
 from Game import Game
+from Waldmeister.WaldmeisterLogic import WaldmeisterLogic
+
+BOARD_SIZE = 5
+COLOR_AMOUNT = 1
 
 
 class WaldmeisterGame(Game):
 
     def getInitBoard(self):
-        return_field = []
-        for i in self.field:
-            for _ in i:
-                return_field.append(0)
-        return np.array(return_field)
+        """
+        Field should be the normal field board_size x board_size with the 9 figures (3 colors x 3 sizes).
+        :return:
+        board as 3D np array with dimensions -> board_size x board_size x 9
+        """
+        game = WaldmeisterLogic(BOARD_SIZE, COLOR_AMOUNT)
+        start_board = np.full((game.board_size, game.board_size, 9), None, dtype=object)
+        return start_board
 
     def getBoardSize(self):
-        return (self.board_size, self.board_size)
+        game = WaldmeisterLogic(BOARD_SIZE, COLOR_AMOUNT)
+        return game.board_size, game.board_size, 9
 
     def getActionSize(self):
-        return self.board_size * self.board_size * 2 + self.color_amount * self.color_amount + 1  # no plus 1???
+        game = WaldmeisterLogic(BOARD_SIZE, COLOR_AMOUNT)
+        return game.board_size * game.board_size * 9 * ((game.board_size - 1) * 3 + 1) + 1  # no plus 1???
 
     def getNextState(self, board, player, action):
+        game = WaldmeisterLogic(BOARD_SIZE, COLOR_AMOUNT)
 
-        if action == self.board_size * self.board_size * 2 + self.color_amount * self.color_amount:
-            return (board, -player)
+        if action == game.board_size * game.board_size * 9 * ((game.board_size - 1) * 3 + 1):
+            return board, -player
+
+        # TODO from here...
         board = d
         b = Board(self.n)
         b.pieces = np.copy(board)

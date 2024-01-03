@@ -648,5 +648,5 @@ class PygameWaldmeisterGUI:
 
 if __name__ == "__main__":
     game = WaldmeisterLogic(board_size=8)
-    gui = PygameWaldmeisterGUI(game)
+    gui = PygameWaldmeisterGUI(game=game)
     gui.run_game()
