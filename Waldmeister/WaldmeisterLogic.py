@@ -9,9 +9,18 @@ class WaldmeisterLogic:
 
     def __init__(self, board_size=8, color_amount=3):
         super().__init__()
+        try:
+            if board_size < 5:
+                raise ValueError
+        except ValueError as e:
+            e.add_note("Number too low! Needs to be at least 5")
+            raise e
+        while color_amount * 18 > board_size ** 2:
+            color_amount -= 1
+            print(f"WARNING: color_amount needed to be adjusted from {color_amount + 1} to {color_amount} bc it was too high!")
         self.board_size = board_size
         self.color_amount = color_amount
-        self.player = [[[0 for _ in range(color_amount)] for _ in range(color_amount)] for _ in range(2)]
+        self.player = [[[0 for _ in range(3)] for _ in range(3)] for _ in range(2)]
         self.field = [[None for _ in range(board_size)] for _ in range(board_size)]
         self.empty_board = True
         self.active_player = -1  # can be -1 or 1 to access over self.player
@@ -21,16 +30,16 @@ class WaldmeisterLogic:
         return self.field[index]
 
     def print_board(self, active_position=None):
-        x = -4
-        y = 3
-        for i in range(15):
+        x = -(self.board_size / 2)
+        y = (self.board_size / 2) - 1
+        for i in range(self.board_size * 2 - 1):
             line_str = ""
             old_x = x
             old_y = y
-            for j in range(15):
+            for j in range(self.board_size * 2 - 1):
                 x += 0.5
                 y += 0.5
-                if 0 <= x < 8 and 0 <= y < 8 and y == int(y) and x == int(x):
+                if 0 <= x < self.board_size and 0 <= y < self.board_size and y == int(y) and x == int(x):
                     if active_position is not None and (x == active_position[0]
                                                         or y == active_position[1]
                                                         or active_position[1] + active_position[0] == x + y):
@@ -51,7 +60,7 @@ class WaldmeisterLogic:
             player = 1
 
         # Validate if passed figure is still available for player
-        if self.player[player][figure[0]][figure[1]] >= 3:
+        if self.player[player][figure[0]][figure[1]] >= self.color_amount:
             return
 
         # add figure to played figures
@@ -79,9 +88,9 @@ class WaldmeisterLogic:
         find active positions to draw allowed lines
         """
         active_positions = []
-        for i in range(8):
+        for i in range(self.board_size):
             active_row = []
-            for j in range(8):
+            for j in range(self.board_size):
                 if (i == active_position[0]
                         or j == active_position[1]
                         or active_position[1] + active_position[0] == i + j):
@@ -99,7 +108,7 @@ class WaldmeisterLogic:
                 active_positions[x][active_position[1]] = 0
         x = active_position[0]
         toggle = False
-        while x < 7:
+        while x < self.board_size - 1:
             x += 1
             if self.field[x][active_position[1]] is not None or toggle:
                 toggle = True
@@ -113,7 +122,7 @@ class WaldmeisterLogic:
                 active_positions[active_position[0]][y] = 0
         y = active_position[1]
         toggle = False
-        while y < 7:
+        while y < self.board_size - 1:
             y += 1
             if self.field[active_position[0]][y] is not None or toggle:
                 toggle = True
@@ -122,7 +131,7 @@ class WaldmeisterLogic:
         x = active_position[0]
         y = active_position[1]
         toggle = False
-        while y > 0 and x < 7:
+        while y > 0 and x < self.board_size - 1:
             y -= 1
             x += 1
             if self.field[x][y] is not None or toggle:
@@ -131,7 +140,7 @@ class WaldmeisterLogic:
         x = active_position[0]
         y = active_position[1]
         toggle = False
-        while y < 7 and x > 0:
+        while y < self.board_size - 1 and x > 0:
             y += 1
             x -= 1
             if self.field[x][y] is not None or toggle:
@@ -144,7 +153,7 @@ class WaldmeisterLogic:
         for i in self.player:
             for j in i:
                 for k in j:
-                    if k < 3:
+                    if k < self.color_amount:
                         return None
         p1 = self.count_points(0)
         p2 = self.count_points(1)
@@ -232,24 +241,23 @@ class WaldmeisterLogic:
         '''
         return boards
 
-    @staticmethod
-    def evaluate_board(board, position):
+    def evaluate_board(self, board, position):
         evaluated_board = []
-        found_pattern = [[0 for _ in range(8)] for _ in range(8)]
-        evaluated_pattern = [[0 for _ in range(8)] for _ in range(8)]
+        found_pattern = [[0 for _ in range(self.board_size)] for _ in range(self.board_size)]
+        evaluated_pattern = [[0 for _ in range(self.board_size)] for _ in range(self.board_size)]
         evaluated_pattern[position[0]][position[1]] = 1
         while found_pattern != evaluated_pattern:
             evaluated_board = []
             found_pattern = [row[:] for row in evaluated_pattern]
-            for i in range(8):
+            for i in range(self.board_size):
                 evaluated_row = []
-                for j in range(8):
+                for j in range(self.board_size):
                     if [i, j] != position and board[i][j] == 1 and (
                             (i > 0 and evaluated_pattern[i - 1][j] == 1) or
-                            (i < 7 and evaluated_pattern[i + 1][j] == 1) or
+                            (i < self.board_size - 1 and evaluated_pattern[i + 1][j] == 1) or
                             (j > 0 and evaluated_pattern[i][j - 1] == 1) or
-                            (j < 7 and evaluated_pattern[i][j + 1] == 1) or
-                            (i > 0 and 7 > j and evaluated_pattern[i - 1][j + 1] == 1)):
+                            (j < self.board_size - 1 and evaluated_pattern[i][j + 1] == 1) or
+                            (i > 0 and self.board_size - 1 > j and evaluated_pattern[i - 1][j + 1] == 1)):
                         evaluated_row.append(1)
                     else:
                         if [i, j] != position:

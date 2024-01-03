@@ -1,10 +1,10 @@
 from unittest import TestCase
 
-from WaldmeisterGame import WaldmeisterGame
+from WaldmeisterLogic import WaldmeisterLogic
 
 
 def prepare_board():
-    game = WaldmeisterGame()
+    game = WaldmeisterLogic()
     game.field[0][6] = [0, 0]
     game.field[1][4] = [0, 0]
     game.field[2][3] = [1, 1]

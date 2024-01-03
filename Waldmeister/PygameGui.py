@@ -28,7 +28,7 @@ class PygameWaldmeisterGUI:
         self.font_size = 40
         self.font_large = pygame.font.Font(None, self.font_size)
 
-        self.active_positions = [[0 for _ in range(8)] for _ in range(8)]
+        self.active_positions = [[0 for _ in range(self.game.board_size)] for _ in range(self.game.board_size)]
         self.active_start = None
         self.active_end = None
         self.symbol = False
@@ -204,8 +204,8 @@ class PygameWaldmeisterGUI:
         self.color_toggle()
         self.ai_toggle()
 
-        edge_vertical = self.field_height / 14
-        edge_horizontal = self.field_width / 14
+        edge_vertical = self.field_height / (self.game.board_size * 2 - 2)
+        edge_horizontal = self.field_width / (self.game.board_size * 2 - 2)
         pygame.draw.polygon(self.screen, (125, 75, 0),
                             [(self.start_diff + self.field_width / 2, self.top_diff - edge_vertical),
                              (self.start_diff - edge_horizontal, self.top_diff + self.field_height / 2),
@@ -219,70 +219,70 @@ class PygameWaldmeisterGUI:
             self.active_positions = self.game.get_active_positions(self.active_start)
 
         # draw lines and dots
-        x = -4
-        y = 3
-        for i in range(15):
+        x = -(self.game.board_size / 2)
+        y = (self.game.board_size / 2) - 1
+        for i in range(self.game.board_size * 2 - 1):
             old_x = x
             old_y = y
-            for j in range(15):
+            for j in range(self.game.board_size * 2 - 1):
                 x += 0.5
                 y += 0.5
-                if 0 <= x < 8 and 0 <= y < 8 and y == int(y) and x == int(x):
-                    x_diamond = (j * self.field_width / 14 + self.start_diff)
-                    y_diamond = (i * self.field_height / 14 + self.top_diff)
+                if 0 <= x < self.game.board_size and 0 <= y < self.game.board_size and y == int(y) and x == int(x):
+                    x_diamond = (j * self.field_width / (self.game.board_size * 2 - 2) + self.start_diff)
+                    y_diamond = (i * self.field_height / (self.game.board_size * 2 - 2) + self.top_diff)
                     radius = int((self.field_width + self.field_height) / 110)
                     height_multiplier = radius / 12
 
                     # draw lines
-                    if y > 0 and x < 7:
+                    if y > 0 and x < self.game.board_size - 1:
                         pygame.draw.line(self.screen, (0, 0, 0),
                                          (x_diamond, y_diamond),
-                                         (x_diamond, y_diamond + (self.field_height / 7)), radius + 2)
+                                         (x_diamond, y_diamond + (self.field_height / self.game.board_size - 1)), radius + 2)
                         if self.active_start and self.active_positions[int(x)][int(y)] == 1 and \
                                 self.active_positions[int(x + 1)][
                                     int(y - 1)] == 1 and self.active_start[1] + self.active_start[0] == int(x) + int(y):
                             pygame.draw.line(self.screen, (25, 150, 50),
                                              (x_diamond, y_diamond),
-                                             (x_diamond, y_diamond + (self.field_height / 7)), radius)
+                                             (x_diamond, y_diamond + (self.field_height / self.game.board_size - 1)), radius)
                         else:
                             pygame.draw.line(self.screen, (150, 150, 50),
                                              (x_diamond, y_diamond),
-                                             (x_diamond, y_diamond + (self.field_height / 7)), radius)
+                                             (x_diamond, y_diamond + (self.field_height / self.game.board_size - 1)), radius)
                     # diagonal forward
-                    if x < 7:
+                    if x < self.game.board_size - 1:
                         pygame.draw.line(self.screen, (0, 0, 0),
                                          (x_diamond, y_diamond),
-                                         (x_diamond + self.field_width / 14, y_diamond + (self.field_height / 14)),
+                                         (x_diamond + self.field_width / (self.game.board_size * 2 - 2), y_diamond + (self.field_height / (self.game.board_size * 2 - 2))),
                                          radius + 2)
                         if self.active_start and self.active_positions[int(x)][int(y)] == 1 and \
                                 self.active_positions[int(x + 1)][
                                     int(y)] == 1 and self.active_start[1] == int(y):
                             pygame.draw.line(self.screen, (25, 150, 50),
                                              (x_diamond, y_diamond),
-                                             (x_diamond + self.field_width / 14, y_diamond + (self.field_height / 14)),
+                                             (x_diamond + self.field_width / (self.game.board_size * 2 - 2), y_diamond + (self.field_height / (self.game.board_size * 2 - 2))),
                                              radius)
                         else:
                             pygame.draw.line(self.screen, (150, 150, 50),
                                              (x_diamond, y_diamond),
-                                             (x_diamond + self.field_width / 14, y_diamond + (self.field_height / 14)),
+                                             (x_diamond + self.field_width / (self.game.board_size * 2 - 2), y_diamond + (self.field_height / (self.game.board_size * 2 - 2))),
                                              radius)
                     # diagonal backwards
                     if y > 0:
                         pygame.draw.line(self.screen, (0, 0, 0),
                                          (x_diamond, y_diamond),
-                                         (x_diamond - self.field_width / 14, y_diamond + (self.field_height / 14)),
+                                         (x_diamond - self.field_width / (self.game.board_size * 2 - 2), y_diamond + (self.field_height / (self.game.board_size * 2 - 2))),
                                          radius + 2)
                         if self.active_start and self.active_positions[int(x)][int(y)] == 1 and \
                                 self.active_positions[int(x)][
                                     int(y - 1)] == 1 and self.active_start[0] == int(x):
                             pygame.draw.line(self.screen, (25, 150, 50),
                                              (x_diamond, y_diamond),
-                                             (x_diamond - self.field_width / 14, y_diamond + (self.field_height / 14)),
+                                             (x_diamond - self.field_width / (self.game.board_size * 2 - 2), y_diamond + (self.field_height / (self.game.board_size * 2 - 2))),
                                              radius)
                         else:
                             pygame.draw.line(self.screen, (150, 150, 50),
                                              (x_diamond, y_diamond),
-                                             (x_diamond - self.field_width / 14, y_diamond + (self.field_height / 14)),
+                                             (x_diamond - self.field_width / (self.game.board_size * 2 - 2), y_diamond + (self.field_height / (self.game.board_size * 2 - 2))),
                                              radius)
                     # empty holes
                     pygame.draw.circle(self.screen, (0, 0, 0),
@@ -447,7 +447,7 @@ class PygameWaldmeisterGUI:
                                          (x_pos, y_pos, width / 6, height / 4))
 
                     # adjusting pos of current stick/symbol
-                    for k in range(3 - j):
+                    for k in range(self.game.color_amount - j):
                         if k == 0:
                             x_pos = x + (0.7 + idx) * width / 4 + width / 16
                             y_pos = y + (1 + jdx) * height / 4 - height / 16
@@ -536,22 +536,22 @@ class PygameWaldmeisterGUI:
                 mouse_x, mouse_y = pygame.mouse.get_pos()
 
                 if self.winner is not None:
-                    self.game.reset_game()
+                    self.game.__init__()
                     self.winner = None
                     self.draw_board()
                     return
                 # Check if the mouse click is inside any of the circles on the board
-                x = -4
-                y = 3
-                for i in range(15):
+                x = -(self.game.board_size / 2)
+                y = (self.game.board_size / 2) - 1
+                for i in range(self.game.board_size * 2 - 1):
                     old_x = x
                     old_y = y
-                    for j in range(15):
+                    for j in range(self.game.board_size * 2 - 1):
                         x += 0.5
                         y += 0.5
-                        if 0 <= x < 8 and 0 <= y < 8 and y == int(y) and x == int(x):
-                            x_diamond = (j * self.field_width / 14 + self.start_diff)
-                            y_diamond = (i * self.field_height / 14 + self.top_diff)
+                        if 0 <= x < self.game.board_size and 0 <= y < self.game.board_size and y == int(y) and x == int(x):
+                            x_diamond = (j * self.field_width / (self.game.board_size * 2 - 2) + self.start_diff)
+                            y_diamond = (i * self.field_height / (self.game.board_size * 2 - 2) + self.top_diff)
                             radius = int((self.field_width + self.field_height) / 110)
 
                             # Check if the mouse click is inside the current circle
@@ -567,8 +567,8 @@ class PygameWaldmeisterGUI:
                 if self.window_width - 115 < mouse_x < self.window_width - 60 and 135 < mouse_y < 165:
                     self.color_scheme = not self.color_scheme
 
-                edge_vertical = self.field_height / 14
-                edge_horizontal = self.field_width / 14
+                edge_vertical = self.field_height / (self.game.board_size * 2 - 2)
+                edge_horizontal = self.field_width / (self.game.board_size * 2 - 2)
                 edge = min(edge_vertical, edge_horizontal)
                 width = self.window_width / 3
                 height = self.bottom_diff - edge * 1.5
@@ -581,7 +581,7 @@ class PygameWaldmeisterGUI:
                             x_pos = x + (0.5 + idx) * width / 4
                             y_pos = y + (0.5 + jdx) * height / 4
                             if x_pos < mouse_x < x_pos + width / 6 and y_pos < mouse_y < y_pos + height / 4:
-                                if j < 3 and self.game.active_player == pdx or (
+                                if j < self.game.color_amount and self.game.active_player == pdx or (
                                         self.game.active_player == -1 and pdx == 0):
                                     self.chosen_color = [pdx, idx, jdx]
 
@@ -637,6 +637,6 @@ class PygameWaldmeisterGUI:
 
 
 if __name__ == "__main__":
-    game = WaldmeisterLogic()
+    game = WaldmeisterLogic(board_size=8)
     gui = PygameWaldmeisterGUI(game)
     gui.run_game()
