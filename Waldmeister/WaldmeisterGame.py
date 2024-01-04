@@ -85,9 +85,14 @@ class WaldmeisterGame(Game):
         return super().getValidMoves(board, player)
 
     def getGameEnded(self, board, player):
-        return super().getGameEnded(board, player)
+        if not np.array_equal(board, self.return_np_format()) or self.game.active_player == player:
+            raise Exception
+        if self.game.has_legal_moves():
+            return 0
+        return self.game.is_winner(player)
 
     def getCanonicalForm(self, board, player):
+        # TODO important for the order of the left available figures
         return super().getCanonicalForm(board, player)
 
     def getSymmetries(self, board, pi):

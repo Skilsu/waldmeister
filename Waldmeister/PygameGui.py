@@ -35,7 +35,7 @@ class PygameWaldmeisterGUI:
         self.color_scheme = True
         self.running = True
         self.chosen_color = [None for _ in range(3)]
-        self.winner = None
+        self.winner = 0
 
     def handle_resize_event(self, event):
         # Update screen size when the window is resized
@@ -500,7 +500,7 @@ class PygameWaldmeisterGUI:
             text_rect.center = (x, y)
             self.screen.blit(text_surface, text_rect)
 
-        if self.winner is not None:
+        if self.winner != 0:
             pygame.draw.rect(self.screen, (50, 50, 50), (
                 self.window_width / 3, self.window_height / 3, self.window_width / 3, self.window_height / 3))
             if self.color_scheme:
@@ -513,12 +513,12 @@ class PygameWaldmeisterGUI:
                 p1 = "Height"
 
             message = ""
-            if self.winner == 0:
+            if self.winner == -1:
                 message = "Player " + p0 + " has won with " + str(self.game.count_points(0)) + " Points!"
             elif self.winner == 1:
                 message = "Player " + p1 + " has won with " + str(self.game.count_points(1)) + " Points!"
-            elif self.winner == -1:
-                message = "It's a draw with " + self.game.count_points(0) + " Points!"
+            elif self.winner != 0:
+                message = "It's a draw with " + str(self.game.count_points(0)) + " Points!"
 
             text_surface_big = self.font_large.render(message, True, (150, 150, 150))
             text_rect_big = text_surface_big.get_rect()
@@ -544,9 +544,9 @@ class PygameWaldmeisterGUI:
                 # Get the mouse position
                 mouse_x, mouse_y = pygame.mouse.get_pos()
 
-                if self.winner is not None:
-                    self.game.__init__()
-                    self.winner = None
+                if self.winner != 0:
+                    self.game.__init__(self.game.board_size, self.game.color_amount)
+                    self.winner = 0
                     self.draw_board()
                     return
                 # Check if the mouse click is inside any of the circles on the board

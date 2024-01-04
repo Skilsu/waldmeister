@@ -177,21 +177,125 @@ class WaldmeisterLogic:
         return active_positions
 
     def winner(self):
+        if self.has_legal_moves():
+            return 0
+        return self.is_winner(1)
+
+    def is_winner(self, current_player):
+        p1 = self.count_points(current_player)
+        p2 = self.count_points(-current_player)
+        if p1 > p2:
+            return 1  # win
+        elif p2 > p1:
+            return -1  # loss
+        return 1e-4  # draw
+
+    def has_legal_moves(self):
         for i in self.player:
             for j in i:
                 for k in j:
-                    if k < self.color_amount:
-                        return None
-        p1 = self.count_points(0)
-        p2 = self.count_points(1)
-        if p1 > p2:
-            return 0
-        elif p2 > p1:
-            return 1
-        else:
-            return -1
+                    if k != self.color_amount:
+                        return True
+        return False
+
+    def get_legal_moves(self, empty_board, game_pieces_players, current_player):
+        if current_player == -1:
+            current_player = 0
+
+        legal_moves = []
+        all_moves = []
+        legal_moves_binary = []
+
+        game_pieces_current_player = game_pieces_players[current_player]
+
+        game_pieces = self.get_game_pieces_as_list(game_pieces_current_player)
+
+        # leeres Feld => erster Zug
+        if empty_board:
+            for piece in game_pieces:
+                moves, moves_binary = self.get_moves(piece)
+                legal_moves.extend(moves)
+                legal_moves_binary.extend(moves_binary)
+            return legal_moves, legal_moves_binary
+
+        # ab hier wenn schon figuren auf feld sind → zweiter Zug...
+
+    def get_moves(self, piece):
+        """
+        Generate all possible moves for a given piece.
+        :param piece: (list) A two-element list representing the piece, where
+                  piece[0] is the height (0-2) and piece[1] is the color (0-2).
+        :return: A tuple containing two lists. The first list contains the standard
+                representation of all possible moves for the piece, and the second
+                list contains the binary representation of these moves.
+        """
+        board_locations = self.get_board_locations()
+        moves = []
+        moves_binary = []
+        for location in board_locations:
+            move = [piece, location]
+            move_binary = self.create_binary_move(piece, location)
+            moves.append(move)
+            moves_binary.append(move_binary)
+
+        return moves, moves_binary
+
+    def create_binary_move(self, piece, location):
+        """
+        Create a binary representation of a move.
+        :param piece: (list) A two-element list representing the piece, where
+                          piece[0] is the height (0-2) and piece[1] is the color (0-2).
+        :param location: (list) A two-element list representing the board location,
+                             where location[0] is the row and location[1] is the column.
+        :return: (list) A binary vector representing the move. The first 9 elements represent
+                  the piece type, and the next 64 elements represent the board position.
+        """
+
+        height, color = piece
+        piece_type = height * 3 + color  # Convert height and color into a single index
+        piece_binary = [0] * 9
+        piece_binary[piece_type] = 1
+
+        # Convert board location to a single index
+        location_index = location[0] * 8 + location[1]
+        location_binary = [0] * 64
+        location_binary[location_index] = 1
+
+        return piece_binary + location_binary
+
+    def get_game_pieces_as_list(self, game_pieces_curPlayer):
+        """
+        Convert the game pieces of the current player into a list format.
+
+        This method processes the game pieces of the current player, represented as a 2D array where
+        each element indicates the number of times a specific piece has been played (maximum of 2).
+        It converts this array into a list of pieces, where each piece is represented by its height and color.
+
+        :param game_pieces_curPlayer: (list) A 2D list representing the current player's game pieces.
+                                    Each element is an integer indicating how many times that specific
+                                    piece has been played.
+        :return: A list of pieces, where each piece is represented as a list [height, color],
+                with 'height' and 'color' indicating the piece's characteristics.
+        """
+        return [[idx, jdx] for idx, row in enumerate(game_pieces_curPlayer)
+                for jdx, piece in enumerate(row) if piece < 3]
+
+    def get_board_locations(self):
+        """
+        Generate a list of all possible board locations.
+        This method creates a list of all possible locations on the game board. Each location
+        is represented as a list [x, y], where 'x' is the row index and 'y' is the column index.
+        :return:
+        """
+        list = []
+        for idx, i in enumerate(self.field):
+            for jdx, j in enumerate(i):
+                list.append([idx, jdx])
+        return list
 
     def count_points(self, player_number):
+        if player_number == -1:
+            player_number = 0
         points = 0
         for i in range(3):
             points += self.count_points_per_layer(player_number, i)
