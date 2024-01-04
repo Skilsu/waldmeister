@@ -19,14 +19,18 @@ class WaldmeisterGame(Game):
         :return: Tuple containing two np arrays -> (board_size x board_size x 9, 2 x 3 x 3)
         """
         # Initialize the board with zeros
-        board = np.zeros((self.game.board_size, self.game.board_size, 9), dtype=int)
+        init_board = np.zeros((self.game.board_size, self.game.board_size, 9), dtype=int)
 
         # Initialize figure counts for both players
         figure_counts = np.full((2, 3, 3), self.game.color_amount, dtype=int)
 
-        return board, figure_counts
+        return init_board, figure_counts
 
     def getBoardSize(self):
+        """
+        Returns the necessary information about the size of both the board and the player's figures.
+        :return: list of Integers: board_size, board_size, 9, 2, 3, 3
+        """
         return self.game.board_size, self.game.board_size, 9, 2, 3, 3
 
     def getActionSize(self):
@@ -34,18 +38,22 @@ class WaldmeisterGame(Game):
 
     def getNextState(self, board, player, action):
         """
-
+        executes move for given player
         :param board:
         :param player:
         :param action:
         :return:
         """
-        if not np.array_equal(board, self.return_np_format()):
+
+        self.game.active_player = player
+
+        if not np.array_equal(board, self.return_np_format()) or self.game.active_player == player:
             raise Exception
 
         if not 0 < action <= self.game.board_size * self.game.board_size * 9 * ((self.game.board_size - 1) * 3 + 1):
             raise ValueError
-        if action == self.game.board_size * self.game.board_size * 9 * ((self.game.board_size - 1) * 3 + 1):  # TODO Needed????
+        if action == self.game.board_size * self.game.board_size * 9 * ((self.game.board_size - 1) * 3 + 1):
+            # TODO +1 Needed????
             return board, -player
 
         moving = None

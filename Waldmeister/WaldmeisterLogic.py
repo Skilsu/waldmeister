@@ -54,7 +54,7 @@ class WaldmeisterLogic:
 
     def make_move(self, starting_from, figure, moving_to=None, moving=None):
         # handle player position
-        if self.active_player == -1:  # TODO useful???
+        if self.active_player == -1:
             player = 0
         else:
             player = 1

@@ -342,7 +342,7 @@ class PygameWaldmeisterGUI:
 
             pygame.draw.rect(self.screen, (30, 30, 30),
                              (x, y, width, height))
-            if not self.game.active_player == pdx or (self.game.active_player == -1 and pdx == 0):
+            if not self.game.active_player == pdx and not (self.game.active_player == -1 and pdx == 0):
                 pygame.draw.rect(self.screen, (0, 0, 0),
                                  (edge * 0.5 + pdx * (self.window_width - info_box_width - edge) + 10,
                                   y - info_box_height + 10, info_box_width - 20, info_box_height - 20))
