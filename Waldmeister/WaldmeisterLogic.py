@@ -23,7 +23,6 @@ class WaldmeisterLogic:
         self.color_amount = color_amount
         self.player = [[[0 for _ in range(3)] for _ in range(3)] for _ in range(2)]
         self.field = [[None for _ in range(board_size)] for _ in range(board_size)]
-        self.empty_board = True
         self.active_player = -1  # can be -1 or 1 to access over self.player
 
     # add [][] indexer syntax to the Board
@@ -53,23 +52,43 @@ class WaldmeisterLogic:
             x = old_x + 0.5
             y = old_y - 0.5
 
-    def make_move(self, starting_from, moving_to, figure):
+    def make_move(self, starting_from, figure, moving_to=None, moving=None):
         # handle player position
-        if self.active_player == -1:
+        if self.active_player == -1:  # TODO useful???
             player = 0
         else:
             player = 1
 
+        if moving:
+            moving_to = [starting_from[0], starting_from[1]]
+            if moving[0] == 0:
+                if moving[1] < starting_from[0]:
+                    moving_to[0] = moving[1]
+                else:
+                    moving_to[0] = moving[1] + 1
+            elif moving[0] == 1:
+                if moving[1] < starting_from[1]:
+                    moving_to[1] = moving[1]
+                else:
+                    moving_to[1] = moving[1] + 1
+            else:
+                if moving[1] < starting_from[1]:
+
+                    moving_to[1] = moving[1]
+                    moving_to[0] += starting_from[1] - moving_to[1]
+                else:
+                    moving_to[1] = moving[1] + 1
+                    moving_to[0] -= starting_from[1] - moving_to[1]
+
         # Validate if passed figure is still available for player
         if self.player[player][figure[0]][figure[1]] >= self.color_amount:
-            return
+            return ValueError  # TODO good practise???
 
         # add figure to played figures
         self.player[player][figure[0]][figure[1]] += 1
 
         # add figure to board (first round)
-        if self.empty_board and self.field[starting_from[0]][starting_from[1]] is None:
-            self.empty_board = False
+        if self.empty_board() and self.field[starting_from[0]][starting_from[1]] is None:
             self.field[starting_from[0]][starting_from[1]] = figure
 
         # add figure to board (not first round)
@@ -83,6 +102,13 @@ class WaldmeisterLogic:
             self.active_player = -1
         else:
             self.active_player = 1
+
+    def empty_board(self):
+        for i in self.field:
+            for j in i:
+                if j is not None:
+                    return False
+        return True
 
     def get_active_positions(self, active_position):
         """

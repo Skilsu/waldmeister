@@ -485,7 +485,7 @@ class PygameWaldmeisterGUI:
         y = self.window_height - self.bottom_diff / 2 + edge
         x = self.window_width / 2
         if (all(item is not None for item in [self.active_start, self.active_end, *self.chosen_color])
-                or self.game.empty_board and all(
+                or self.game.empty_board() and all(
                     item is not None for item in [self.active_end, *self.chosen_color])):
             pygame.draw.rect(self.screen, (0, 150, 50), (x - width / 2, y - height * 1.5, width, height))
         else:
@@ -620,13 +620,13 @@ class PygameWaldmeisterGUI:
                 self.draw_board()
 
     def proceed_action(self):
-        if self.game.empty_board and all(item is not None for item in [self.active_end, *self.chosen_color]):
-            self.game.make_move(self.active_end, None, self.chosen_color[1:])
+        if self.game.empty_board() and all(item is not None for item in [self.active_end, *self.chosen_color]):
+            self.game.make_move(starting_from=self.active_end, figure=self.chosen_color[1:])
             self.active_end = None
             self.chosen_color = [None for _ in range(3)]
 
         if all(item is not None for item in [self.active_start, self.active_end, *self.chosen_color]):
-            self.game.make_move(self.active_start, self.active_end, self.chosen_color[1:])
+            self.game.make_move(starting_from=self.active_start, moving_to=self.active_end, figure=self.chosen_color[1:])
             self.active_start = None
             self.active_end = None
             self.chosen_color = [None for _ in range(3)]
@@ -634,7 +634,7 @@ class PygameWaldmeisterGUI:
     def action(self, position):
         if self.active_start and self.active_positions[position[0]][position[1]]:
             self.active_end = position
-        elif self.game.field[position[0]][position[1]] is None and self.game.empty_board:
+        elif self.game.field[position[0]][position[1]] is None and self.game.empty_board():
             self.active_end = position
         if self.game.field[position[0]][position[1]]:
             self.active_end = None
@@ -647,6 +647,6 @@ class PygameWaldmeisterGUI:
 
 
 if __name__ == "__main__":
-    game = WaldmeisterLogic(board_size=8)
+    game = WaldmeisterLogic(board_size=5)
     gui = PygameWaldmeisterGUI(game=game)
     gui.run_game()
