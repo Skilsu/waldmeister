@@ -38,6 +38,8 @@ class WaldmeisterGame(Game):
         game = WaldmeisterLogic(BOARD_SIZE, COLOR_AMOUNT)
         game.field = self.convert_to_original_format(board)
 
+        if action > game.board_size * game.board_size * 9 * ((game.board_size - 1) * 3 + 1):
+            raise ValueError
         if action == game.board_size * game.board_size * 9 * ((game.board_size - 1) * 3 + 1):  # TODO Needed????
             return board, -player
 
@@ -59,7 +61,7 @@ class WaldmeisterGame(Game):
         i = color // 3
         j = color % 3
         figure = [i, j]
-        print(f"{action=}, {moving=}, {color=}, {figure=}, {y=}, {x=}")
+        print(f"starting_from=[{x}, {y}], {figure=}, {moving=}, {action=}, {color=}, {x=}, {y=}")
 
         game.make_move(starting_from=[x, y], figure=figure, moving=moving)
         game.print_board()
@@ -113,5 +115,5 @@ if __name__ == "__main__":
     test = WaldmeisterGame()
     board = test.getInitBoard()
     WaldmeisterLogic(BOARD_SIZE, COLOR_AMOUNT).print_board()
-    board, _ = test.getNextState(board, 0, 80)
-    board, _ = test.getNextState(board, 0, 911)
+    board, _ = test.getNextState(board, 0, 110)
+    board, _ = test.getNextState(board, 0, 1403)
