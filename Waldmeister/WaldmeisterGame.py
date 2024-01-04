@@ -44,18 +44,21 @@ class WaldmeisterGame(Game):
         :param action:
         :return:
         """
-
-        self.game.active_player = player
-
+        # input checks
         if not np.array_equal(board, self.return_np_format()) or self.game.active_player == player:
             raise Exception
-
         if not 0 < action <= self.game.board_size * self.game.board_size * 9 * ((self.game.board_size - 1) * 3 + 1):
             raise ValueError
+
+        # reset current player
+        self.game.active_player = player
+
+        # + 1 logic... not really useful?
         if action == self.game.board_size * self.game.board_size * 9 * ((self.game.board_size - 1) * 3 + 1):
             # TODO +1 Needed????
             return board, -player
 
+        # calculating move
         moving = None
         if action >= self.game.board_size * self.game.board_size * 9:
             raw_move = action % ((self.game.board_size - 1) * 3)
@@ -64,24 +67,34 @@ class WaldmeisterGame(Game):
             moving = [move_direction, move_distance]
             action = int(action / ((self.game.board_size - 1) * 3))
         elif not self.game.empty_board():
+            # board should be empty if no move is provided
             raise ValueError
+
+        # calculation of figure
         color = action % 9
         action_1 = action - color
         action_1 = action_1 / 9
-        y = int(action_1) % self.game.board_size
-        x = action_1 - y
-        x = int(x / self.game.board_size)
+
         i = color // 3
         j = color % 3
         figure = [i, j]
+
+        # calculation of starting position
+        y = int(action_1) % self.game.board_size
+        x = action_1 - y
+        x = int(x / self.game.board_size)
+
         print(f"starting_from=[{x}, {y}], {figure=}, {moving=}, {action=}, {color=}, {x=}, {y=}")
 
+        # execute move
         self.game.make_move(starting_from=[x, y], figure=figure, moving=moving)
         self.game.print_board()
 
         return self.return_np_format(), -player
 
     def getValidMoves(self, board, player):
+        if not np.array_equal(board, self.return_np_format()) or self.game.active_player == player:
+            raise Exception
         return super().getValidMoves(board, player)
 
     def getGameEnded(self, board, player):
@@ -92,13 +105,19 @@ class WaldmeisterGame(Game):
         return self.game.is_winner(player)
 
     def getCanonicalForm(self, board, player):
+        if not np.array_equal(board, self.return_np_format()) or self.game.active_player == player:
+            raise Exception
         # TODO important for the order of the left available figures
         return super().getCanonicalForm(board, player)
 
     def getSymmetries(self, board, pi):
+        if not np.array_equal(board, self.return_np_format()):
+            raise Exception
         return super().getSymmetries(board, pi)
 
     def stringRepresentation(self, board):
+        if not np.array_equal(board, self.return_np_format()):
+            raise Exception
         return super().stringRepresentation(board)
 
     def return_np_format(self):
