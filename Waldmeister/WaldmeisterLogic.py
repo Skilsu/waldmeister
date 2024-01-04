@@ -78,7 +78,7 @@ class WaldmeisterLogic:
                     moving_to[0] += starting_from[1] - moving_to[1]
                 else:
                     moving_to[1] = moving[1] + 1
-                    moving_to[0] -= starting_from[1] - moving_to[1]
+                    moving_to[0] += starting_from[1] - moving_to[1]
 
         # Validate if passed figure is still available for player
         if self.player[player][figure[0]][figure[1]] >= self.color_amount:

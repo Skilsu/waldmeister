@@ -44,9 +44,8 @@ class WaldmeisterGame(Game):
         moving = None
         if action >= game.board_size * game.board_size * 9:
             raw_move = action % ((game.board_size - 1) * 3)
-            print(raw_move / (game.board_size - 1), raw_move % 3)
             move_direction = int(raw_move / (game.board_size - 1))  # TODO issue! doesnt work correctly
-            move_distance = raw_move % 3
+            move_distance = raw_move % (game.board_size - 1)
             moving = [move_direction, move_distance]
             action = int(action / ((game.board_size - 1) * 3))
         elif not game.empty_board():
@@ -115,4 +114,4 @@ if __name__ == "__main__":
     board = test.getInitBoard()
     WaldmeisterLogic(BOARD_SIZE, COLOR_AMOUNT).print_board()
     board, _ = test.getNextState(board, 0, 80)
-    board, _ = test.getNextState(board, 0, 910)
+    board, _ = test.getNextState(board, 0, 911)
