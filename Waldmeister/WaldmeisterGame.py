@@ -9,23 +9,28 @@ COLOR_AMOUNT = 1
 
 class WaldmeisterGame(Game):
 
+    def __init__(self):
+        super().__init__()
+        self.game = WaldmeisterLogic(BOARD_SIZE, COLOR_AMOUNT)
+
     def getInitBoard(self):
         """
-        Field should be the normal field board_size x board_size with the 9 figures (3 colors x 3 sizes).
-        :return:
-        board as 3D np array with dimensions -> board_size x board_size x 9
+        Returns the initial game state including both the board and information about player's figures.
+        :return: Tuple containing two np arrays -> (board_size x board_size x 9, 2 x 3 x 3)
         """
-        game = WaldmeisterLogic(BOARD_SIZE, COLOR_AMOUNT)
-        start_board = np.full((game.board_size, game.board_size, 9), 0, dtype=object)
-        return start_board
+        # Initialize the board with zeros
+        board = np.zeros((self.game.board_size, self.game.board_size, 9), dtype=int)
+
+        # Initialize figure counts for both players
+        figure_counts = np.full((2, 3, 3), self.game.color_amount, dtype=int)
+
+        return board, figure_counts
 
     def getBoardSize(self):
-        game = WaldmeisterLogic(BOARD_SIZE, COLOR_AMOUNT)
-        return game.board_size, game.board_size, 9
+        return self.game.board_size, self.game.board_size, 9, 2, 3, 3
 
     def getActionSize(self):
-        game = WaldmeisterLogic(BOARD_SIZE, COLOR_AMOUNT)
-        return game.board_size * game.board_size * 9 * ((game.board_size - 1) * 3 + 1) + 1  # no plus 1???
+        return self.game.board_size * self.game.board_size * 9 * ((self.game.board_size - 1) * 3 + 1) + 1  # no plus 1??
 
     def getNextState(self, board, player, action):
         """
@@ -35,48 +40,38 @@ class WaldmeisterGame(Game):
         :param action:
         :return:
         """
-        game = WaldmeisterLogic(BOARD_SIZE, COLOR_AMOUNT)
-        game.field = self.convert_to_original_format(board)
+        if not np.array_equal(board, self.return_np_format()):
+            raise Exception
 
-        if action > game.board_size * game.board_size * 9 * ((game.board_size - 1) * 3 + 1):
+        if not 0 < action <= self.game.board_size * self.game.board_size * 9 * ((self.game.board_size - 1) * 3 + 1):
             raise ValueError
-        if action == game.board_size * game.board_size * 9 * ((game.board_size - 1) * 3 + 1):  # TODO Needed????
+        if action == self.game.board_size * self.game.board_size * 9 * ((self.game.board_size - 1) * 3 + 1):  # TODO Needed????
             return board, -player
 
         moving = None
-        if action >= game.board_size * game.board_size * 9:
-            raw_move = action % ((game.board_size - 1) * 3)
-            move_direction = int(raw_move / (game.board_size - 1))  # TODO issue! doesnt work correctly
-            move_distance = raw_move % (game.board_size - 1)
+        if action >= self.game.board_size * self.game.board_size * 9:
+            raw_move = action % ((self.game.board_size - 1) * 3)
+            move_direction = int(raw_move / (self.game.board_size - 1))
+            move_distance = raw_move % (self.game.board_size - 1)
             moving = [move_direction, move_distance]
-            action = int(action / ((game.board_size - 1) * 3))
-        elif not game.empty_board():
+            action = int(action / ((self.game.board_size - 1) * 3))
+        elif not self.game.empty_board():
             raise ValueError
         color = action % 9
         action_1 = action - color
         action_1 = action_1 / 9
-        y = int(action_1) % game.board_size
+        y = int(action_1) % self.game.board_size
         x = action_1 - y
-        x = int(x / game.board_size)
+        x = int(x / self.game.board_size)
         i = color // 3
         j = color % 3
         figure = [i, j]
         print(f"starting_from=[{x}, {y}], {figure=}, {moving=}, {action=}, {color=}, {x=}, {y=}")
 
-        game.make_move(starting_from=[x, y], figure=figure, moving=moving)
-        game.print_board()
+        self.game.make_move(starting_from=[x, y], figure=figure, moving=moving)
+        self.game.print_board()
 
-        num_figures = 9  # Assuming 3 colors x 3 sizes
-        board = np.full((game.board_size, game.board_size, num_figures), 0, dtype=object)
-
-        for i in range(game.board_size):
-            for j in range(game.board_size):
-                if game.field[i][j] is not None:
-                    color, size = game.field[i][j]
-                    figure_index = color * 3 + size
-                    board[i, j, figure_index] = 1
-
-        return board, -player
+        return self.return_np_format(), -player
 
     def getValidMoves(self, board, player):
         return super().getValidMoves(board, player)
@@ -92,6 +87,17 @@ class WaldmeisterGame(Game):
 
     def stringRepresentation(self, board):
         return super().stringRepresentation(board)
+
+    def return_np_format(self):
+        board = np.full((self.game.board_size, self.game.board_size, 9), 0, dtype=object)
+
+        for i in range(self.game.board_size):
+            for j in range(self.game.board_size):
+                if self.game.field[i][j] is not None:
+                    color, size = self.game.field[i][j]
+                    figure_index = color * 3 + size
+                    board[i, j, figure_index] = 1
+        return board
 
     @staticmethod
     def convert_to_original_format(np_board):
