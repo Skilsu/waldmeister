@@ -32,6 +32,7 @@ class WaldmeisterLogic:
     def print_board(self, active_position=None):
         x = -(self.board_size / 2)
         y = (self.board_size / 2) - 1
+        active_positions = self.get_active_positions(active_position)
         for i in range(self.board_size * 2 - 1):
             line_str = ""
             old_x = x
@@ -40,17 +41,48 @@ class WaldmeisterLogic:
                 x += 0.5
                 y += 0.5
                 if 0 <= x < self.board_size and 0 <= y < self.board_size and y == int(y) and x == int(x):
-                    if active_position is not None and (x == active_position[0]
-                                                        or y == active_position[1]
-                                                        or active_position[1] + active_position[0] == x + y):
-                        line_str = line_str + str("Nein")
+                    if x == active_position[0] and y == active_position[1]:
+                        line_str = line_str + "\u0332".join(str(self.field[int(x)][int(y)]))
+                    elif active_position is not None and active_positions[int(x)][int(y)] == 1:
+                        line_str = line_str + str("Active")
+                    elif self.field[int(x)][int(y)] is None:
+                        line_str = line_str + " None "
                     else:
                         line_str = line_str + str(self.field[int(x)][int(y)])
                 else:
-                    line_str = line_str + "    "
+                    line_str = line_str + "      "
             print(line_str)
             x = old_x + 0.5
             y = old_y - 0.5
+
+    @staticmethod
+    def get_move_position(starting_from, moving):
+        moving_to = [starting_from[0], starting_from[1]]
+        if moving[0] == 0:
+            if moving[1] < starting_from[0]:
+                moving_to[0] = moving[1]
+            else:
+                moving_to[0] = moving[1] + 1
+        elif moving[0] == 1:
+            if moving[1] < starting_from[1]:
+                moving_to[1] = moving[1]
+            else:
+                moving_to[1] = moving[1] + 1
+        else:
+            if moving[1] < starting_from[1]:
+
+                moving_to[1] = moving[1]
+                moving_to[0] += starting_from[1] - moving_to[1]
+            else:
+                moving_to[1] = moving[1] + 1
+                moving_to[0] += starting_from[1] - moving_to[1]
+        return moving_to
+
+    def get_moves(self, starting_from):
+        possible_moves = self.get_active_positions(starting_from)
+
+        moves = 0
+        return moves
 
     def make_move(self, starting_from, figure, moving_to=None, moving=None):
         # handle player position
@@ -60,25 +92,7 @@ class WaldmeisterLogic:
             player = 1
 
         if moving:
-            moving_to = [starting_from[0], starting_from[1]]
-            if moving[0] == 0:
-                if moving[1] < starting_from[0]:
-                    moving_to[0] = moving[1]
-                else:
-                    moving_to[0] = moving[1] + 1
-            elif moving[0] == 1:
-                if moving[1] < starting_from[1]:
-                    moving_to[1] = moving[1]
-                else:
-                    moving_to[1] = moving[1] + 1
-            else:
-                if moving[1] < starting_from[1]:
-
-                    moving_to[1] = moving[1]
-                    moving_to[0] += starting_from[1] - moving_to[1]
-                else:
-                    moving_to[1] = moving[1] + 1
-                    moving_to[0] += starting_from[1] - moving_to[1]
+            moving_to = self.get_move_position(starting_from, moving)
 
         # Validate if passed figure is still available for player
         if self.player[player][figure[0]][figure[1]] >= self.color_amount:
@@ -401,5 +415,7 @@ class WaldmeisterLogic:
 
 
 if __name__ == "__main__":
-    game = WaldmeisterLogic()
-    game.print_board()
+    game = WaldmeisterLogic(5)
+    game.field[2][2] = [0, 0]
+    game.field[1][2] = [0, 0]
+    game.print_board([2, 2])
