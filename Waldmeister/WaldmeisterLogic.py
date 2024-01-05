@@ -32,6 +32,8 @@ class WaldmeisterLogic:
     def print_board(self, active_position=None):
         x = -(self.board_size / 2)
         y = (self.board_size / 2) - 1
+        if active_position is None:
+            active_position = [-1, -1]
         active_positions = self.get_active_positions(active_position)
         for i in range(self.board_size * 2 - 1):
             line_str = ""
@@ -42,7 +44,10 @@ class WaldmeisterLogic:
                 y += 0.5
                 if 0 <= x < self.board_size and 0 <= y < self.board_size and y == int(y) and x == int(x):
                     if x == active_position[0] and y == active_position[1]:
-                        line_str = line_str + "\u0332".join(str(self.field[int(x)][int(y)]))
+                        if self.field[int(x)][int(y)] is None:
+                            line_str = line_str + "\u0332".join(" None ")
+                        else:
+                            line_str = line_str + "\u0332".join(str(self.field[int(x)][int(y)]))
                     elif active_position is not None and active_positions[int(x)][int(y)] == 1:
                         line_str = line_str + str("Active")
                     elif self.field[int(x)][int(y)] is None:
@@ -78,10 +83,30 @@ class WaldmeisterLogic:
                 moving_to[0] += starting_from[1] - moving_to[1]
         return moving_to
 
-    def get_moves(self, starting_from):
+    def get_legal_moves_for_position(self, starting_from):
+        if self.field[starting_from[0]][starting_from[1]] is None:
+            return [0 for _ in range(3 * (self.board_size - 1))]
         possible_moves = self.get_active_positions(starting_from)
-
-        moves = 0
+        moves_1 = []
+        for i in possible_moves:
+            moves_1.append(i[starting_from[1]])
+        moves_2 = possible_moves[starting_from[0]]
+        moves_3 = []
+        x = starting_from[0] + starting_from[1]
+        y = 0
+        for i in range(starting_from[0] + starting_from[1] + 1):
+            if 0 <= x < self.board_size and 0 <= y < self.board_size:
+                moves_3.append(possible_moves[x][y])
+            x -= 1
+            y += 1
+        while len(moves_3) < len(moves_2):
+            moves_3.append(0)
+        moves_1.remove(1)
+        moves_2.remove(1)
+        moves_3.remove(1)
+        moves = moves_1
+        moves.extend(moves_2)
+        moves.extend(moves_3)
         return moves
 
     def make_move(self, starting_from, figure, moving_to=None, moving=None):
@@ -126,8 +151,10 @@ class WaldmeisterLogic:
 
     def get_active_positions(self, active_position):
         """
-        find active positions to draw allowed lines
+        find active positions to draw allowed lines.
         """
+        if active_position is None or self.field[active_position[0]][active_position[1]] is None:
+            return [[0 for _ in range(self.board_size)] for _ in range(self.board_size)]
         active_positions = []
         for i in range(self.board_size):
             active_row = []
@@ -234,7 +261,7 @@ class WaldmeisterLogic:
 
         # ab hier wenn schon figuren auf feld sind → zweiter Zug...
 
-    def get_moves(self, piece):
+    def get_moves_old(self, piece):
         """
         Generate all possible moves for a given piece.
         :param piece: (list) A two-element list representing the piece, where
@@ -416,6 +443,7 @@ class WaldmeisterLogic:
 
 if __name__ == "__main__":
     game = WaldmeisterLogic(5)
-    game.field[2][2] = [0, 0]
+    game.field[1][1] = [0, 0]
     game.field[1][2] = [0, 0]
-    game.print_board([2, 2])
+    game.print_board([1, 2])
+    print(game.get_legal_moves_for_position([1, 2]))
