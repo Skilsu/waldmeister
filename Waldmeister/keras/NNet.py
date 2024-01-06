@@ -55,7 +55,6 @@ class NNetWrapper(NeuralNet):
         pi, v = self.nnet.model.predict((np_board, np_figures), verbose=False)
 
         #print('PREDICTION TIME TAKEN : {0:03f}'.format(time.time()-start))
-        print("predict worked")
         return pi[0], v[0]
 
     def save_checkpoint(self, folder='checkpoint', filename='checkpoint.pth.tar'):

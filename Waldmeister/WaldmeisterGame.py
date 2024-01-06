@@ -46,7 +46,6 @@ class WaldmeisterGame(Game):
         game = self.get_game(board)
 
         if not 0 <= action <= BOARD_SIZE * BOARD_SIZE * 9 * ((BOARD_SIZE - 1) * 3 + 1):
-            print(action)
             raise ValueError
 
         # + 1 logic... not really useful?
@@ -58,9 +57,6 @@ class WaldmeisterGame(Game):
 
         # execute move
         game.make_move(starting_from=starting_from, figure=figure, moving=moving, player=player)
-        game.print_board()
-        print(game.player)
-        print("NextState worked")
         return self.return_np_format(game.field, game.player), -player
 
     def getValidMoves(self, board, player):
@@ -70,7 +66,6 @@ class WaldmeisterGame(Game):
         for i in range(BOARD_SIZE):
             for j in range(BOARD_SIZE):
                 total_moves.extend(game.get_legal_moves_for_position([i, j]))
-        print(len(total_moves), len(total_moves) / 13)
 
         legal_figures = []
         if player == -1:
@@ -90,10 +85,8 @@ class WaldmeisterGame(Game):
                 else:
                     total_moves_figures.append(0)
 
-        print(len(total_moves_figures), len(total_moves_figures) / 9)
         total_moves_figures.append(0)
         ones = list(filter(lambda x: x == 1, total_moves_figures))
-        print(len(ones))
         return total_moves_figures
 
     def getGameEnded(self, board, player):
@@ -106,8 +99,7 @@ class WaldmeisterGame(Game):
         np_board, np_figures = board
         if player == -1:
             np_figures_swapped = np.swapaxes(np_figures, 1, 2)
-            print(np_figures)  # TODO muss irgendwas
-            print(np_figures_swapped)
+            np_figures_swapped[0], np_figures_swapped[1] = np_figures_swapped[1], np_figures_swapped[0]
             return np_board, np_figures_swapped
         return board
 
@@ -158,7 +150,7 @@ class WaldmeisterGame(Game):
         x = action - y
         x = int(x / BOARD_SIZE)
 
-        print(f"starting_from=[{x}, {y}], {figure=}, {moving=}, {action=}, {color=}, {x=}, {y=}")
+        # print(f"starting_from=[{x}, {y}], {figure=}, {moving=}, {action=}, {color=}, {x=}, {y=}")
         return [x, y], figure, moving
 
     def get_game(self, board):
@@ -191,7 +183,6 @@ class WaldmeisterGame(Game):
         for i in range(2):
             for j in range(3):
                 for k in range(3):
-                    print(f"{i=}, {j=}, {k=}, {np_figures=}")
                     original_format_figures[i][j][k] = int(np_figures[i, j, k])
 
         return original_format_board, original_format_figures
