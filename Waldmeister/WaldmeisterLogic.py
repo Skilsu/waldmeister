@@ -23,18 +23,19 @@ class WaldmeisterLogic:
         self.color_amount = color_amount
         self.player = [[[0 for _ in range(3)] for _ in range(3)] for _ in range(2)]
         self.field = [[None for _ in range(board_size)] for _ in range(board_size)]
-        self.active_player = -1  # can be -1 or 1 to access over self.player
+
 
     # add [][] indexer syntax to the Board
     def __getitem__(self, index):
         return self.field[index]
 
-    def print_board(self, active_position=None):
+    def get_str(self, player, active_position=None):
         x = -(self.board_size / 2)
         y = (self.board_size / 2) - 1
         if active_position is None:
             active_position = [-1, -1]
         active_positions = self.get_active_positions(active_position)
+        full_str = ""
         for i in range(self.board_size * 2 - 1):
             line_str = ""
             old_x = x
@@ -56,9 +57,30 @@ class WaldmeisterLogic:
                         line_str = line_str + str(self.field[int(x)][int(y)])
                 else:
                     line_str = line_str + "      "
-            print(line_str)
+            full_str = full_str + line_str + "\n"
             x = old_x + 0.5
             y = old_y - 0.5
+        for i in range(3):
+            if player == 1:
+                full_str = (full_str + f" {self.color_amount - self.player[1][i][0]} "
+                                       f"{self.color_amount - self.player[1][i][1]} "
+                                       f"{self.color_amount - self.player[1][i][2]}" +
+                            "                                         " +
+                            f" {self.color_amount - self.player[0][i][0]} "
+                            f"{self.color_amount - self.player[0][i][1]} "
+                            f"{self.color_amount - self.player[0][i][2]}\n")
+            else:
+                full_str = (full_str + f" {self.color_amount - self.player[0][i][0]} "
+                                       f"{self.color_amount - self.player[0][i][1]} "
+                                       f"{self.color_amount - self.player[0][i][2]}" +
+                            "                                         " +
+                            f" {self.color_amount - self.player[1][i][0]} "
+                            f"{self.color_amount - self.player[1][i][1]} "
+                            f"{self.color_amount - self.player[1][i][2]}\n")
+        return full_str
+
+    def print_board(self, active_position=None):
+        print(self.get_str(player=1, active_position=active_position))
 
     @staticmethod
     def get_move_position(starting_from, moving):
@@ -109,9 +131,9 @@ class WaldmeisterLogic:
         moves.extend(moves_3)
         return moves
 
-    def make_move(self, starting_from, figure, moving_to=None, moving=None):
+    def make_move(self, starting_from, figure, player, moving_to=None, moving=None):
         # handle player position
-        if self.active_player == -1:
+        if player == -1:
             player = 0
         else:
             player = 1
@@ -135,12 +157,6 @@ class WaldmeisterLogic:
               and self.field[starting_from[0]][starting_from[1]] is not None):
             self.field[moving_to[0]][moving_to[1]] = self.field[starting_from[0]][starting_from[1]]
             self.field[starting_from[0]][starting_from[1]] = figure
-
-        # change active player for next move
-        if self.active_player == 1:
-            self.active_player = -1
-        else:
-            self.active_player = 1
 
     def empty_board(self):
         for i in self.field:

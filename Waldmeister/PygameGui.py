@@ -36,6 +36,7 @@ class PygameWaldmeisterGUI:
         self.running = True
         self.chosen_color = [None for _ in range(3)]
         self.winner = 0
+        self.active_player = -1  # can be -1 or 1 to access over self.player
 
     def handle_resize_event(self, event):
         # Update screen size when the window is resized
@@ -342,7 +343,7 @@ class PygameWaldmeisterGUI:
 
             pygame.draw.rect(self.screen, (30, 30, 30),
                              (x, y, width, height))
-            if not self.game.active_player == pdx and not (self.game.active_player == -1 and pdx == 0):
+            if not self.active_player == pdx and not (self.active_player == -1 and pdx == 0):
                 pygame.draw.rect(self.screen, (0, 0, 0),
                                  (edge * 0.5 + pdx * (self.window_width - info_box_width - edge) + 10,
                                   y - info_box_height + 10, info_box_width - 20, info_box_height - 20))
@@ -591,8 +592,8 @@ class PygameWaldmeisterGUI:
                             x_pos = x + (0.5 + idx) * width / 4
                             y_pos = y + (0.5 + jdx) * height / 4
                             if x_pos < mouse_x < x_pos + width / 6 and y_pos < mouse_y < y_pos + height / 4:
-                                if j < self.game.color_amount and self.game.active_player == pdx or (
-                                        self.game.active_player == -1 and pdx == 0):
+                                if j < self.game.color_amount and self.active_player == pdx or (
+                                        self.active_player == -1 and pdx == 0):
                                     self.chosen_color = [pdx, idx, jdx]
 
                     x = self.window_width - width - edge * 0.5
@@ -621,12 +622,19 @@ class PygameWaldmeisterGUI:
 
     def proceed_action(self):
         if self.game.empty_board() and all(item is not None for item in [self.active_end, *self.chosen_color]):
-            self.game.make_move(starting_from=self.active_end, figure=self.chosen_color[1:])
+            self.game.make_move(starting_from=self.active_end,
+                                figure=self.chosen_color[1:],
+                                player=self.active_player)
+            self.active_player = -self.active_player
             self.active_end = None
             self.chosen_color = [None for _ in range(3)]
 
         if all(item is not None for item in [self.active_start, self.active_end, *self.chosen_color]):
-            self.game.make_move(starting_from=self.active_start, moving_to=self.active_end, figure=self.chosen_color[1:])
+            self.game.make_move(starting_from=self.active_start,
+                                moving_to=self.active_end,
+                                figure=self.chosen_color[1:],
+                                player=self.active_player)
+            self.active_player = -self.active_player
             self.active_start = None
             self.active_end = None
             self.chosen_color = [None for _ in range(3)]

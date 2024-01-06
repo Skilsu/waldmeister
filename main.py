@@ -3,8 +3,8 @@ import logging
 import coloredlogs
 
 from Coach import Coach
-from muehle.MuehleGame import MuehleGame as Game
-from muehle.pytorch.NNet import NNetWrapper as nn
+from Waldmeister.WaldmeisterGame import WaldmeisterGame as Game
+from Waldmeister.keras.NNet import NNetWrapper as nn
 from utils import *
 
 log = logging.getLogger(__name__)
