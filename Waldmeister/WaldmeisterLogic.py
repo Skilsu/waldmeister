@@ -82,8 +82,7 @@ class WaldmeisterLogic:
     def print_board(self, active_position=None):
         print(self.get_str(player=1, active_position=active_position))
 
-    @staticmethod
-    def get_move_position(starting_from, moving):
+    def get_move_position(self, starting_from, moving):
         moving_to = [starting_from[0], starting_from[1]]
         if moving[0] == 0:
             if moving[1] < starting_from[0]:
@@ -96,8 +95,11 @@ class WaldmeisterLogic:
             else:
                 moving_to[1] = moving[1] + 1
         else:
-            if moving[1] < starting_from[1]:
+            additional = starting_from[0] + starting_from[1] - self.board_size
+            if additional >= 0:
+                moving[1] += additional + 1
 
+            if moving[1] < starting_from[1]:
                 moving_to[1] = moving[1]
                 moving_to[0] += starting_from[1] - moving_to[1]
             else:
@@ -147,6 +149,11 @@ class WaldmeisterLogic:
 
         # add figure to played figures
         self.player[player][figure[0]][figure[1]] += 1
+
+        if moving_to is not None and not moving_to[0] < self.board_size > moving_to[1]:
+            print(f"{starting_from=}, {figure=}, {player=}, {moving_to=}, {moving=}")
+        if not starting_from[0] < self.board_size > starting_from[1]:
+            print(f"{starting_from=}, {figure=}, {player=}, {moving_to=}, {moving=}")
 
         # add figure to board (first round)
         if self.empty_board() and self.field[starting_from[0]][starting_from[1]] is None:

@@ -53,7 +53,10 @@ class WaldmeisterGame(Game):
             # TODO +1 Needed????
             return board, -player
 
-        starting_from, figure, moving = self.get_move_from_action(action)
+        starting_from, figure, moving = self.get_move_from_action(action, player)
+
+        if moving is not None and moving[1] > BOARD_SIZE - 1:
+            print(f"{starting_from=}, {figure=}, {moving=}, {action=}, {player=}")
 
         # execute move
         game.make_move(starting_from=starting_from, figure=figure, moving=moving, player=player)
@@ -97,6 +100,10 @@ class WaldmeisterGame(Game):
 
     def getCanonicalForm(self, board, player):
         np_board, np_figures = board
+        reshaped_board = np.zeros_like(np_board)
+        for i in range(3):
+            for j in range(3):
+                reshaped_board[:, :, i * 3 + j] = np_board[:, :, j * 3 + i]
         if player == -1:
             np_figures_swapped = np.swapaxes(np_figures, 1, 2)
             np_figures_swapped[0], np_figures_swapped[1] = np_figures_swapped[1], np_figures_swapped[0]
@@ -110,9 +117,11 @@ class WaldmeisterGame(Game):
     def stringRepresentation(self, board):
         return self.get_game(board).get_str(player=1)
 
+    def display(self, board):
+        print(self.stringRepresentation(board))
+
     @staticmethod
     def return_np_format(original_board, original_figures):
-
         board = np.zeros((BOARD_SIZE, BOARD_SIZE, 9), dtype=int)
         figures = np.zeros((2, 3, 3), dtype=int)
         for i in range(BOARD_SIZE):
@@ -128,13 +137,16 @@ class WaldmeisterGame(Game):
         return board, figures
 
     @staticmethod
-    def get_move_from_action(action):
+    def get_move_from_action(action, player):
         # calculation of figure
         color = action % 9
         action = int(action / 9)
         i = color // 3
         j = color % 3
-        figure = [i, j]
+        if player == -1:
+            figure = [j, i]
+        else:
+            figure = [i, j]
 
         # calculating move
         moving = None

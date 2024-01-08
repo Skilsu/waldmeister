@@ -115,7 +115,7 @@ class Coach():
             pmcts = MCTS(self.game, self.pnet, self.args)
             current_training_losses = {"pi": [],
                                         "v": []}
-            self.nnet.train(trainExamples, current_training_losses)
+            self.nnet.train(trainExamples)  # , current_training_losses
             nmcts = MCTS(self.game, self.nnet, self.args)
 
             log.info('PITTING AGAINST PREVIOUS VERSION')
