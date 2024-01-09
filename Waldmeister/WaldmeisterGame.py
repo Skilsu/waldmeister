@@ -45,11 +45,11 @@ class WaldmeisterGame(Game):
         """
         game = self.get_game(board)
 
-        if not 0 <= action <= BOARD_SIZE * BOARD_SIZE * 9 * ((BOARD_SIZE - 1) * 3 + 1):
+        if not 0 <= action <= BOARD_SIZE * BOARD_SIZE * 9 * ((BOARD_SIZE - 1) * 3) + 1:
             raise ValueError
 
         # + 1 logic... not really useful?
-        if action == BOARD_SIZE * BOARD_SIZE * 9 * ((BOARD_SIZE - 1) * 3 + 1):
+        if action == BOARD_SIZE * BOARD_SIZE * 9 * ((BOARD_SIZE - 1) * 3) + 1:
             # TODO +1 Needed????
             return board, -player
 
@@ -59,7 +59,12 @@ class WaldmeisterGame(Game):
             print(f"{starting_from=}, {figure=}, {moving=}, {action=}, {player=}")
 
         # execute move
-        game.make_move(starting_from=starting_from, figure=figure, moving=moving, player=player)
+        try:
+            game.make_move(starting_from=starting_from, figure=figure, moving=moving, player=player)
+        except Exception as e:
+            self.display(board)
+            print(f"{starting_from=}, {figure=}, {moving=}, {action=}, {player=}")
+
         return self.return_np_format(game.field, game.player), -player
 
     def getValidMoves(self, board, player):
