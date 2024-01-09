@@ -60,7 +60,6 @@ class Arena():
             assert self.display
             print("Game over: Turn ", str(it), "Result ", str(self.game.getGameEnded(board, 1)))
             self.display(board)
-        print("Game over: Turn ", str(it), "Result ", str(self.game.getGameEnded(board, 1)))
         return curPlayer * self.game.getGameEnded(board, curPlayer)
 
     def playGames(self, num, verbose=False):
