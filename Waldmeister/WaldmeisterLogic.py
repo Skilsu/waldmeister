@@ -3,6 +3,9 @@ Board class.
 Bord data:
 
 """
+import logging
+
+log = logging.getLogger(__name__)
 
 
 class WaldmeisterLogic:
@@ -17,13 +20,13 @@ class WaldmeisterLogic:
             raise e
         while color_amount * 18 > board_size ** 2:
             color_amount -= 1
-            print(f"WARNING: color_amount needed to be adjusted from {color_amount + 1} to {color_amount} bc it was "
-                  f"too high!")
+            log.warning(
+                f"WARNING: color_amount needed to be adjusted from {color_amount + 1} to {color_amount} bc it was "
+                f"too high!")
         self.board_size = board_size
         self.color_amount = color_amount
         self.player = [[[0 for _ in range(3)] for _ in range(3)] for _ in range(2)]
         self.field = [[None for _ in range(board_size)] for _ in range(board_size)]
-
 
     # add [][] indexer syntax to the Board
     def __getitem__(self, index):
@@ -151,9 +154,9 @@ class WaldmeisterLogic:
         self.player[player][figure[0]][figure[1]] += 1
 
         if moving_to is not None and not moving_to[0] < self.board_size > moving_to[1]:
-            print(f"{starting_from=}, {figure=}, {player=}, {moving_to=}, {moving=}")
+            log.error(f"{starting_from=}, {figure=}, {player=}, {moving_to=}, {moving=}")
         if not starting_from[0] < self.board_size > starting_from[1]:
-            print(f"{starting_from=}, {figure=}, {player=}, {moving_to=}, {moving=}")
+            log.error(f"{starting_from=}, {figure=}, {player=}, {moving_to=}, {moving=}")
 
         # add figure to board (first round)
         if self.empty_board() and self.field[starting_from[0]][starting_from[1]] is None:
@@ -466,7 +469,7 @@ class WaldmeisterLogic:
 
 if __name__ == "__main__":
     game = WaldmeisterLogic(5)
-    game.field[1][1] = [0, 0]
-    game.field[1][2] = [0, 0]
-    game.print_board([1, 2])
+    game.make_move([2, 4], [0, 0], -1)
+    game.make_move([2, 4], [2, 1], -1, moving=[2, 1])
+    print(game.get_str(1))
     print(game.get_legal_moves_for_position([1, 2]))

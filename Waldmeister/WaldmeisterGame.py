@@ -1,7 +1,11 @@
+import logging
+
 import numpy as np
 
 from Game import Game
 from Waldmeister.WaldmeisterLogic import WaldmeisterLogic
+
+log = logging.getLogger(__name__)
 
 BOARD_SIZE = 5
 COLOR_AMOUNT = 1
@@ -45,25 +49,27 @@ class WaldmeisterGame(Game):
         """
         game = self.get_game(board)
 
-        if not 0 <= action <= BOARD_SIZE * BOARD_SIZE * 9 * ((BOARD_SIZE - 1) * 3) + 1:
+        if not 0 <= action <= BOARD_SIZE * BOARD_SIZE * 9 * ((BOARD_SIZE - 1) * 3 + 1) + 1:
             raise ValueError
 
         # + 1 logic... not really useful?
-        if action == BOARD_SIZE * BOARD_SIZE * 9 * ((BOARD_SIZE - 1) * 3) + 1:
+        if action == BOARD_SIZE * BOARD_SIZE * 9 * ((BOARD_SIZE - 1) * 3 + 1) + 1:
             # TODO +1 Needed????
             return board, -player
 
         starting_from, figure, moving = self.get_move_from_action(action, player)
 
         if moving is not None and moving[1] > BOARD_SIZE - 1:
-            print(f"{starting_from=}, {figure=}, {moving=}, {action=}, {player=}")
+            log.error(f"{starting_from=}, {figure=}, {moving=}, {action=}, {player=}")
 
         # execute move
         try:
             game.make_move(starting_from=starting_from, figure=figure, moving=moving, player=player)
         except Exception as e:
             self.display(board)
-            print(f"{starting_from=}, {figure=}, {moving=}, {action=}, {player=}")
+            log.error(f"{starting_from=}, {figure=}, {moving=}, {action=}, {player=}")
+            self.get_move_from_action(action, player)
+            raise e
 
         return self.return_np_format(game.field, game.player), -player
 
@@ -94,6 +100,9 @@ class WaldmeisterGame(Game):
                     total_moves_figures.append(0)
 
         total_moves_figures.append(0)
+        if len(total_moves_figures) != BOARD_SIZE * BOARD_SIZE * 9 * ((BOARD_SIZE - 1) * 3 + 1) + 1:
+            log.error(f"Len of total_moves_figures should be {BOARD_SIZE * BOARD_SIZE * 9 * ((BOARD_SIZE - 1) * 3 + 1) + 1} but is {len(total_moves_figures)}")
+            raise ValueError
         ones = list(filter(lambda x: x == 1, total_moves_figures))
         return total_moves_figures
 
@@ -106,13 +115,14 @@ class WaldmeisterGame(Game):
     def getCanonicalForm(self, board, player):
         np_board, np_figures = board
         reshaped_board = np.zeros_like(np_board)
+        new_figures = np.zeros_like(np_figures)
         for i in range(3):
             for j in range(3):
                 reshaped_board[:, :, i * 3 + j] = np_board[:, :, j * 3 + i]
         if player == -1:
             np_figures_swapped = np.swapaxes(np_figures, 1, 2)
-            np_figures_swapped[0], np_figures_swapped[1] = np_figures_swapped[1], np_figures_swapped[0]
-            return np_board, np_figures_swapped
+            new_figures[0], new_figures[1] = np_figures_swapped[1], np_figures_swapped[0]
+            return reshaped_board, new_figures
         return board
 
     def getSymmetries(self, board, pi):
@@ -156,6 +166,7 @@ class WaldmeisterGame(Game):
         # calculating move
         moving = None
         if action >= BOARD_SIZE ** 2:
+            action = action - BOARD_SIZE ** 2
             raw_move = action % ((BOARD_SIZE - 1) * 3)
             move_direction = int(raw_move / (BOARD_SIZE - 1))
             move_distance = raw_move % (BOARD_SIZE - 1)
@@ -167,7 +178,7 @@ class WaldmeisterGame(Game):
         x = action - y
         x = int(x / BOARD_SIZE)
 
-        # print(f"starting_from=[{x}, {y}], {figure=}, {moving=}, {action=}, {color=}, {x=}, {y=}")
+        log.debug(f"starting_from=[{x}, {y}], {figure=}, {moving=}, {action=}, {color=}, {x=}, {y=}")
         return [x, y], figure, moving
 
     def get_game(self, board):
@@ -208,7 +219,10 @@ class WaldmeisterGame(Game):
 if __name__ == "__main__":
     test = WaldmeisterGame()
     board = test.getInitBoard()
-    WaldmeisterLogic(BOARD_SIZE, COLOR_AMOUNT).print_board()
+    test.display(board)
     board, player = test.getNextState(board, 1, 110)
+    board = test.getCanonicalForm(board, player)
+    test.display(board)
     board, player = test.getNextState(board, player, 1403)
+    test.display(board)
     test.getValidMoves(board, player)
