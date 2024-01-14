@@ -1,8 +1,19 @@
+import copy
+import logging
 import math
+import threading
 
 import pygame
+from Waldmeister.WaldmeisterGame import WaldmeisterGame
+from Waldmeister.WaldmeisterLogic import WaldmeisterLogic
+from Waldmeister.WaldmeisterPlayers import AiWaldmeisterPlayer
 
-from WaldmeisterLogic import WaldmeisterLogic
+log = logging.getLogger(__name__)
+
+MODELS = [[["Easy", "best_nico_5.h5"], ["Difficult", "best_abdul_5.h5"]],
+          [],
+          [],
+          [["Easy", "checkpoint_4_abdul_8.h5"], ["Difficult", "best_abdul_8.h5"]]]
 
 
 class PygameWaldmeisterGUI:
@@ -20,6 +31,7 @@ class PygameWaldmeisterGUI:
         self.field_height = (self.window_height - self.top_diff - self.bottom_diff)
 
         self.game = game
+        self.game_ai = WaldmeisterGame(self.game.board_size, self.game.color_amount)
         self.screen = pygame.display.set_mode((self.window_width, self.window_height), pygame.RESIZABLE)
         pygame.display.set_caption('Waldmeister')
         pygame.font.init()
@@ -31,12 +43,36 @@ class PygameWaldmeisterGUI:
         self.active_positions = [[0 for _ in range(self.game.board_size)] for _ in range(self.game.board_size)]
         self.active_start = None
         self.active_end = None
+
         self.symbol = False
         self.color_scheme = True
+        self.ai = False
+        self.no_ai = False
+        self.ai_types, self.ai_lambdas = self.generate_ai()
+        self.chosen_ai_type = 0
         self.running = True
+        self.ai_v_ai = False
+        self.chosen_ai_type_2 = 0
+        self.mirror = True
+        self.moving = False
+        self.auto_play = False
+
         self.chosen_color = [None for _ in range(3)]
         self.winner = 0
         self.active_player = -1  # can be -1 or 1 to access over self.player
+
+    def generate_ai(self):
+        ai_types = []
+        ai_lambdas = []
+
+        if not (self.game.board_size > len(MODELS) + 4):
+            for model in MODELS[self.game.board_size - 5]:
+                ai_types.append(model[0])
+                ai_lambdas.append(AiWaldmeisterPlayer(self.game_ai, model[1]).play)
+        if not ai_lambdas:
+            self.no_ai = True
+        ai_types.append("Alpha Beta")
+        return ai_types, ai_lambdas
 
     def handle_resize_event(self, event):
         # Update screen size when the window is resized
@@ -53,48 +89,57 @@ class PygameWaldmeisterGUI:
         self.screen = pygame.display.set_mode((self.window_width, self.window_height), pygame.RESIZABLE)
         self.draw_board()
 
-    def _toggle(self, x, y, name_1, name_2, value):
+    def _toggle(self, x, y, names, value):
+        size = len(names) - 1
         pygame.draw.line(self.screen, (255, 255, 255),
-                         (x - 75, y + 49),
+                         (x - 100 + size * 25, y + 49),
                          (x - 100, y + 49),
                          20)
         pygame.draw.circle(self.screen, (255, 255, 255),
-                           (x - 75, y + 50), 10)
+                           (x - 100 + size * 25, y + 50), 10)
         pygame.draw.circle(self.screen, (255, 255, 255),
                            (x - 100, y + 50), 10)
 
         pygame.draw.line(self.screen, (0, 0, 0),
-                         (x - 75, y + 49),
+                         (x - 100 + size * 25, y + 49),
                          (x - 100, y + 49),
                          18)
         pygame.draw.circle(self.screen, (0, 0, 0),
-                           (x - 75, y + 50), 9)
+                           (x - 100 + size * 25, y + 50), 9)
         pygame.draw.circle(self.screen, (0, 0, 0),
                            (x - 100, y + 50), 9)
 
-        if value:
-            text_surface = self.font.render(name_1, True, (255, 255, 255))
-
-            pygame.draw.circle(self.screen, (255, 255, 255),
-                               (x - 100, y + 50), 15)
-        else:
-            text_surface = self.font.render(name_2, True, (255, 255, 255))
-            pygame.draw.circle(self.screen, (255, 255, 255),
-                               (x - 75, y + 50), 15)
+        text_surface = self.font.render(names[int(value)], True, (255, 255, 255))
+        pygame.draw.circle(self.screen, (255, 255, 255),
+                           (x - 100 + int(value) * 25, y + 50), 15)
 
         text_rect = text_surface.get_rect()
-        text_rect.center = (x - 88, y + 90)
+        text_rect.center = (x - 100 + size * 12, y + 90)
         self.screen.blit(text_surface, text_rect)
 
     def symbol_toggle(self):
-        self._toggle(self.window_width, 0, "Sticks", "Symbols", not self.symbol)  # not bc aesthetics
+        self._toggle(self.window_width, 0, ["Sticks", "Symbols"], not self.symbol)  # not bc aesthetics
 
     def color_toggle(self):
-        self._toggle(self.window_width, 100, "Default", "Colored", self.color_scheme)
+        self._toggle(self.window_width, 100, ["Default", "Colored"], self.color_scheme)
 
     def ai_toggle(self):
-        #  TODO implement Ai game
-        self._toggle(175, 0, "Human", "Ai", True)
+        self._toggle(175, 0, ["Human", "Ai"], self.ai)
+
+    def ai_strength_toggle(self):
+        self._toggle(250, 0, self.ai_types, self.chosen_ai_type)
+
+    def ai_v_ai_toggle(self):
+        self._toggle(175, 100, ["vs. Human", "vs. Ai"], self.ai_v_ai)
+
+    def ai_type_toggle(self):
+        self._toggle(250, 100, self.ai_types, self.chosen_ai_type_2)
+
+    def mirror_toggle(self):
+        self._toggle(400, 0, ["Left", "Right"], self.mirror)
+
+    def auto_toggle(self):
+        self._toggle(525, 0, ["Klick", "Auto"], self.auto_play)
 
     def draw_symbol(self, symbol, x_diamond, y_diamond, radius, height_multiplier, chosen_color):
         a, b, c = 0, 0, 0
@@ -204,6 +249,13 @@ class PygameWaldmeisterGUI:
         self.symbol_toggle()
         self.color_toggle()
         self.ai_toggle()
+        if self.ai:
+            self.ai_strength_toggle()
+            self.mirror_toggle()
+            self.auto_toggle()
+            self.ai_v_ai_toggle()
+            if self.ai_v_ai:
+                self.ai_type_toggle()
 
         edge_vertical = self.field_height / (self.game.board_size * 2 - 2)
         edge_horizontal = self.field_width / (self.game.board_size * 2 - 2)
@@ -215,6 +267,44 @@ class PygameWaldmeisterGUI:
                                  self.top_diff + self.field_height + edge_vertical),
                              (self.start_diff + self.field_width + edge_horizontal,
                               self.top_diff + self.field_height / 2)])
+
+        if self.winner != 0:
+            pygame.draw.rect(self.screen, (50, 50, 50), (
+                self.window_width / 3, 0, self.window_width / 3, self.top_diff))
+            ai = ""
+            if self.ai:
+                ai = "Ai: "
+            if self.color_scheme:
+                p0 = "Color"
+            else:
+                p0 = "Color"
+            if self.symbol:
+                p1 = "Symbol"
+            else:
+                p1 = "Height"
+            if self.mirror:
+                p1 = ai + p1
+            else:
+                p0 = ai + p0
+            message = ""
+            if self.winner == -1:
+                message = "Player " + p0 + " has won with " + str(self.game.count_points(0)) + " Points!"
+            elif self.winner == 1:
+                message = "Player " + p1 + " has won with " + str(self.game.count_points(1)) + " Points!"
+            elif self.winner != 0:
+                message = "It's a draw with " + str(self.game.count_points(0)) + " Points!"
+
+            text_surface_big = self.font_large.render(message, True, (255, 255, 255))
+            text_rect_big = text_surface_big.get_rect()
+            text_rect_height_big = text_rect_big.height + 100
+            text_rect_width_big = max(text_rect_big.width + 100, self.window_width / 3)
+
+            pygame.draw.rect(self.screen, (50, 50, 50), (
+                self.window_width / 2 - text_rect_width_big / 2, 0,
+                text_rect_width_big, text_rect_height_big))
+
+            text_rect_big.center = (self.window_width / 2, self.top_diff / 2)
+            self.screen.blit(text_surface_big, text_rect_big)
 
         if self.active_start:
             self.active_positions = self.game.get_active_positions(self.active_start)
@@ -355,25 +445,32 @@ class PygameWaldmeisterGUI:
             num3 = str(self.game.count_points_per_layer(pdx, 2))
             num4 = str(self.game.count_points(pdx))
             part4 = "Total: " + num4
+            ai = ""
+            if self.ai:
+                ai = "Ai: "
             if pdx == 0:
+                if self.mirror and not self.ai_v_ai:
+                    ai = ""
                 if self.color_scheme:
-                    heading = "Color"
+                    heading = ai + "Color"
                     part1 = "Olive: " + num1
                     part2 = "Green: " + num2
                     part3 = "Yellow: " + num3
                 else:
-                    heading = "Color"
+                    heading = ai + "Color"
                     part1 = "Red: " + num1
                     part2 = "Green: " + num2
                     part3 = "Blue: " + num3
             else:
+                if not self.mirror and not self.ai_v_ai:
+                    ai = ""
                 if self.symbol:
-                    heading = "Symbol"
+                    heading = ai + "Symbol"
                     part1 = "Circle: " + num1
                     part2 = "Square: " + num2
                     part3 = "Triangle: " + num3
                 else:
-                    heading = "Height"
+                    heading = ai + "Height"
                     part1 = "Small: " + num1
                     part2 = "Medium: " + num2
                     part3 = "Tall: " + num3
@@ -475,7 +572,8 @@ class PygameWaldmeisterGUI:
             y = self.window_height - self.bottom_diff + edge
 
         # Render the text
-        text_surface = self.font.render("Make Move", True, (255, 255, 255))
+        button_text = "Make Move"
+        text_surface = self.font.render(button_text, True, (255, 255, 255))
         text_rect = text_surface.get_rect()
         text_rect_height = text_rect.height + 10  # Add padding for better visibility
         text_rect_width = text_rect.width + 10  # Add padding for better visibility
@@ -485,13 +583,22 @@ class PygameWaldmeisterGUI:
 
         y = self.window_height - self.bottom_diff / 2 + edge
         x = self.window_width / 2
-        if (all(item is not None for item in [self.active_start, self.active_end, *self.chosen_color])
-                or self.game.empty_board() and all(
-                    item is not None for item in [self.active_end, *self.chosen_color])):
+        if ((all(item is not None for item in [self.active_start, self.active_end, *self.chosen_color])
+             or self.game.empty_board()
+             and all(item is not None for item in [self.active_end, *self.chosen_color])) or not self.moving and
+                (self.ai and
+                 (self.ai_v_ai or
+                  (self.mirror and self.active_player == 1 or not self.mirror and self.active_player == -1)))):
+            if self.ai and self.ai_v_ai and self.auto_play:
+                button_text = "Play"
             pygame.draw.rect(self.screen, (0, 150, 50), (x - width / 2, y - height * 1.5, width, height))
         else:
+            if self.ai and self.ai_v_ai and self.auto_play:
+                button_text = "Running..."
             pygame.draw.rect(self.screen, (50, 50, 50), (x - width / 2, y - height * 1.5, width, height))
         # Draw the text
+        text_surface = self.font.render(button_text, True, (255, 255, 255))
+        text_rect = text_surface.get_rect()
         text_rect.center = (x, y - height)
         self.screen.blit(text_surface, text_rect)
 
@@ -500,38 +607,6 @@ class PygameWaldmeisterGUI:
             text_rect = text_surface.get_rect()
             text_rect.center = (x, y)
             self.screen.blit(text_surface, text_rect)
-
-        if self.winner != 0:
-            pygame.draw.rect(self.screen, (50, 50, 50), (
-                self.window_width / 3, self.window_height / 3, self.window_width / 3, self.window_height / 3))
-            if self.color_scheme:
-                p0 = "Color"
-            else:
-                p0 = "Color"
-            if self.symbol:
-                p1 = "Symbol"
-            else:
-                p1 = "Height"
-
-            message = ""
-            if self.winner == -1:
-                message = "Player " + p0 + " has won with " + str(self.game.count_points(0)) + " Points!"
-            elif self.winner == 1:
-                message = "Player " + p1 + " has won with " + str(self.game.count_points(1)) + " Points!"
-            elif self.winner != 0:
-                message = "It's a draw with " + str(self.game.count_points(0)) + " Points!"
-
-            text_surface_big = self.font_large.render(message, True, (150, 150, 150))
-            text_rect_big = text_surface_big.get_rect()
-            text_rect_height_big = max(text_rect_big.height + 100, self.window_height / 3)
-            text_rect_width_big = max(text_rect_big.width + 100, self.window_width / 3)
-
-            pygame.draw.rect(self.screen, (50, 50, 50), (
-                self.window_width / 2 - text_rect_width_big / 2, self.window_height / 2 - text_rect_height_big / 2,
-                text_rect_width_big, text_rect_height_big))
-
-            text_rect_big.center = (self.window_width / 2, self.window_height / 2)
-            self.screen.blit(text_surface_big, text_rect_big)
 
         pygame.display.update()
 
@@ -553,91 +628,258 @@ class PygameWaldmeisterGUI:
                 # Check if the mouse click is inside any of the circles on the board
                 x = -(self.game.board_size / 2)
                 y = (self.game.board_size / 2) - 1
-                for i in range(self.game.board_size * 2 - 1):
-                    old_x = x
-                    old_y = y
-                    for j in range(self.game.board_size * 2 - 1):
-                        x += 0.5
-                        y += 0.5
-                        if 0 <= x < self.game.board_size and 0 <= y < self.game.board_size and y == int(y) and x == int(
-                                x):
-                            x_diamond = (j * self.field_width / (self.game.board_size * 2 - 2) + self.start_diff)
-                            y_diamond = (i * self.field_height / (self.game.board_size * 2 - 2) + self.top_diff)
-                            radius = int((self.field_width + self.field_height) / 110)
 
-                            # Check if the mouse click is inside the current circle
-                            if (
-                                    (mouse_x - x_diamond) ** 2 + (mouse_y - y_diamond) ** 2
-                            ) ** 0.5 <= radius + 5:
-                                self.action([int(x), int(y)])
-                    x = old_x + 0.5
-                    y = old_y - 0.5
-
+                # handle toggles
                 if self.window_width - 115 < mouse_x < self.window_width - 60 and 35 < mouse_y < 65:
                     self.symbol = not self.symbol
                 if self.window_width - 115 < mouse_x < self.window_width - 60 and 135 < mouse_y < 165:
                     self.color_scheme = not self.color_scheme
+                if 60 < mouse_x < 115 and 35 < mouse_y < 65 and not self.no_ai:
+                    self.ai = not self.ai
+                if self.ai:
+                    if 125 < mouse_x < 235 and 35 < mouse_y < 65:
+                        if self.chosen_ai_type < len(self.ai_types) - 1:
+                            self.chosen_ai_type += 1
+                        else:
+                            self.chosen_ai_type = 0
+                    if 60 < mouse_x < 115 and 135 < mouse_y < 165:
+                        self.ai_v_ai = not self.ai_v_ai
+                    if self.ai_v_ai and 125 < mouse_x < 235 and 135 < mouse_y < 165:
+                        if self.chosen_ai_type_2 < len(self.ai_types) - 1:
+                            self.chosen_ai_type_2 += 1
+                        else:
+                            self.chosen_ai_type_2 = 0
+                    if 280 < mouse_x < 340 and 35 < mouse_y < 65:
+                        self.mirror = not self.mirror
+                    if 405 < mouse_x < 465 and 35 < mouse_y < 65:
+                        self.auto_play = not self.auto_play
 
                 edge_vertical = self.field_height / (self.game.board_size * 2 - 2)
                 edge_horizontal = self.field_width / (self.game.board_size * 2 - 2)
                 edge = min(edge_vertical, edge_horizontal)
-                width = self.window_width / 3
-                height = self.bottom_diff - edge * 1.5
+                if not self.moving:
+                    if (not (self.ai and
+                             (self.ai_v_ai or
+                              (self.mirror and self.active_player == 1
+                               or not self.mirror and self.active_player == -1)))):
+                        for i in range(self.game.board_size * 2 - 1):
+                            old_x = x
+                            old_y = y
+                            for j in range(self.game.board_size * 2 - 1):
+                                x += 0.5
+                                y += 0.5
+                                if 0 <= x < self.game.board_size and 0 <= y < self.game.board_size and y == int(
+                                        y) and x == int(x):
+                                    x_diamond = (
+                                            j * self.field_width / (self.game.board_size * 2 - 2) + self.start_diff)
+                                    y_diamond = (i * self.field_height / (self.game.board_size * 2 - 2) + self.top_diff)
+                                    radius = int((self.field_width + self.field_height) / 110)
 
-                x = edge * 0.5
-                y = self.window_height - self.bottom_diff + edge
-                for pdx, player in enumerate(self.game.player):
-                    for idx, i in enumerate(player):
-                        for jdx, j in enumerate(i):
-                            x_pos = x + (0.5 + idx) * width / 4
-                            y_pos = y + (0.5 + jdx) * height / 4
-                            if x_pos < mouse_x < x_pos + width / 6 and y_pos < mouse_y < y_pos + height / 4:
-                                if j < self.game.color_amount and self.active_player == pdx or (
-                                        self.active_player == -1 and pdx == 0):
-                                    self.chosen_color = [pdx, idx, jdx]
+                                    # Check if the mouse click is inside the current circle
+                                    if (
+                                            (mouse_x - x_diamond) ** 2 + (mouse_y - y_diamond) ** 2
+                                    ) ** 0.5 <= radius + 5:
+                                        self.action([int(x), int(y)])
+                            x = old_x + 0.5
+                            y = old_y - 0.5
 
-                    x = self.window_width - width - edge * 0.5
-                    y = self.window_height - self.bottom_diff + edge
+                        # get figure choices
 
-                # Render the text
-                text_surface = self.font.render("Make Move", True, (255, 255, 255))
-                text_rect = text_surface.get_rect()
-                text_rect_height = text_rect.height + 10  # Add padding for better visibility
-                text_rect_width = text_rect.width + 10  # Add padding for better visibility
+                        width = self.window_width / 3
+                        height = self.bottom_diff - edge * 1.5
 
-                height = min(75, max(text_rect_height, self.bottom_diff / 4))
-                width = min(200, max(text_rect_width, self.window_width / 6))
+                        x = edge * 0.5
+                        y = self.window_height - self.bottom_diff + edge
+                        for pdx, player in enumerate(self.game.player):
+                            for idx, i in enumerate(player):
+                                for jdx, j in enumerate(i):
+                                    x_pos = x + (0.5 + idx) * width / 4
+                                    y_pos = y + (0.5 + jdx) * height / 4
+                                    if x_pos < mouse_x < x_pos + width / 6 and y_pos < mouse_y < y_pos + height / 4:
+                                        if j < self.game.color_amount and self.active_player == pdx or (
+                                                self.active_player == -1 and pdx == 0):
+                                            self.chosen_color = [pdx, idx, jdx]
 
-                y = self.window_height - self.bottom_diff / 2 + edge
-                x = self.window_width / 2
-                if x - width / 2 < mouse_x < x + width / 2 and y - height * 1.5 < mouse_y < y - height * 0.5:
-                    self.proceed_action()
-                if x - width / 2 < mouse_x < x + width / 2 and y - height * 0.5 < mouse_y < y + height * 0.5:
-                    self.game.active_start = None
-                    self.active_end = None
-                    self.chosen_color = [None for _ in range(3)]
+                            x = self.window_width - width - edge * 0.5
+                            y = self.window_height - self.bottom_diff + edge
+
+                    # Get Button pressed
+                    text_surface = self.font.render("Make Move", True, (255, 255, 255))
+                    text_rect = text_surface.get_rect()
+                    text_rect_height = text_rect.height + 10  # Add padding for better visibility
+                    text_rect_width = text_rect.width + 10  # Add padding for better visibility
+
+                    height = min(75, max(text_rect_height, self.bottom_diff / 4))
+                    width = min(200, max(text_rect_width, self.window_width / 6))
+
+                    y = self.window_height - self.bottom_diff / 2 + edge
+                    x = self.window_width / 2
+                    if x - width / 2 < mouse_x < x + width / 2 and y - height * 1.5 < mouse_y < y - height * 0.5:
+                        self.proceed_action()
+                    if x - width / 2 < mouse_x < x + width / 2 and y - height * 0.5 < mouse_y < y + height * 0.5:
+                        self.game.active_start = None
+                        self.active_end = None
+                        self.chosen_color = [None for _ in range(3)]
 
                 self.winner = self.game.winner()
                 self.draw_board()
 
     def proceed_action(self):
-        if self.game.empty_board() and all(item is not None for item in [self.active_end, *self.chosen_color]):
-            self.game.make_move(starting_from=self.active_end,
-                                figure=self.chosen_color[1:],
-                                player=self.active_player)
+        if (self.ai and
+                (self.ai_v_ai or
+                 (self.mirror and self.active_player == 1 or not self.mirror and self.active_player == -1))):
+            self.moving = True
+            self.draw_board()
+            self.proceed_ai_action()
+            self.moving = False
             self.active_player = -self.active_player
-            self.active_end = None
-            self.chosen_color = [None for _ in range(3)]
+            if self.auto_play and self.winner == 0:
+                self.draw_board()
+                self.handle_event()
+                self.winner = self.game.winner()
+                if self.winner == 0:
+                    self.proceed_action()
+        else:
+            if self.game.empty_board() and all(item is not None for item in [self.active_end, *self.chosen_color]):
+                self.game.make_move(starting_from=self.active_end,
+                                    figure=self.chosen_color[1:],
+                                    player=self.active_player)
+                self.active_player = -self.active_player
+                self.active_end = None
+                self.chosen_color = [None for _ in range(3)]
 
-        if all(item is not None for item in [self.active_start, self.active_end, *self.chosen_color]):
-            self.game.make_move(starting_from=self.active_start,
-                                moving_to=self.active_end,
-                                figure=self.chosen_color[1:],
-                                player=self.active_player)
-            self.active_player = -self.active_player
-            self.active_start = None
-            self.active_end = None
-            self.chosen_color = [None for _ in range(3)]
+            if all(item is not None for item in [self.active_start, self.active_end, *self.chosen_color]):
+                self.game.make_move(starting_from=self.active_start,
+                                    moving_to=self.active_end,
+                                    figure=self.chosen_color[1:],
+                                    player=self.active_player)
+                self.active_player = -self.active_player
+                self.active_start = None
+                self.active_end = None
+                self.chosen_color = [None for _ in range(3)]
+            if self.ai and self.auto_play and self.winner == 0:
+                self.draw_board()
+                self.handle_event()
+                self.winner = self.game.winner()
+                self.active_player = -self.active_player
+                if self.winner == 0:
+                    self.proceed_action()
+
+    def proceed_ai_action(self):
+        if not self.ai_v_ai:
+            chosen_ai = self.chosen_ai_type
+        else:
+            if self.mirror and self.active_player == 1 or not self.mirror and self.active_player == -1:
+                chosen_ai = self.chosen_ai_type
+            else:
+                chosen_ai = self.chosen_ai_type_2
+
+        board = self.game_ai.return_np_format(self.game.field, self.game.player)
+        moving_to = None
+        moving = None
+        if chosen_ai == len(self.ai_types) - 1:
+            starting_from, figure, moving_to = self.alpha_beta()
+        else:
+            action = self.ai_lambdas[chosen_ai](self.game_ai.getCanonicalForm(board, self.active_player))
+
+            valids = self.game_ai.getValidMoves(self.game_ai.getCanonicalForm(board, self.active_player), 1)
+
+            if valids[action] == 0:
+                log.error(f'Action {action} is not valid!')
+                log.debug(f'valids = {valids}')
+                assert valids[action] > 0
+
+            starting_from, figure, moving = self.game_ai.get_move_from_action(action, self.active_player)
+        self.game.make_move(starting_from=starting_from,
+                            figure=figure,
+                            moving=moving,
+                            player=self.active_player,
+                            moving_to=moving_to)
+
+    def alpha_beta(self):
+        player = self.active_player
+        if player == -1:
+            player = 0
+        if self.game.empty_board():
+            actions = []
+            values = []
+            for idx, row in enumerate(self.game.field):
+                for jdx, position in enumerate(row):
+                    for kdx, color_list in enumerate(self.game.player[player]):
+                        for ldx, figure_pos in enumerate(color_list):
+                            if figure_pos < self.game.color_amount:
+                                copied_player = copy.deepcopy(self.game.player)
+                                copied_player[player][kdx][ldx] += 1
+                                copied_field = copy.deepcopy(self.game.field)
+                                copied_field[idx][jdx] = [kdx, ldx]
+                                values.append([[idx, jdx], [kdx, ldx], None])
+                                actions.append(self.calculate_position([copied_player, copied_field],
+                                                                       -self.active_player, 1))
+            max_val = max(actions)
+            max_index = actions.index(max_val)
+        else:
+            actions = []
+            values = []
+            for idx, row in enumerate(self.game.field):
+                for jdx, position in enumerate(row):
+                    if position is not None:
+                        for kdx, color_list in enumerate(self.game.player[player]):
+                            for ldx, figure_pos in enumerate(color_list):
+                                if figure_pos < self.game.color_amount:
+                                    for mdx, m in enumerate(self.game.get_active_positions([idx, jdx])):
+                                        for ndx, n in enumerate(m):
+                                            if n == 1 and not (mdx == idx and ndx == jdx):
+                                                copied_player = copy.deepcopy(self.game.player)
+                                                copied_player[player][kdx][ldx] += 1
+                                                copied_field = copy.deepcopy(self.game.field)
+                                                copied_field[mdx][ndx] = copied_field[idx][jdx]
+                                                copied_field[idx][jdx] = [kdx, ldx]
+                                                values.append([[idx, jdx], [kdx, ldx], [mdx, ndx]])
+                                                actions.append(self.calculate_position([copied_player, copied_field],
+                                                                                       -self.active_player, 1))
+            max_val = max(actions)
+            max_index = actions.index(max_val)
+        return values[max_index][0], values[max_index][1], values[max_index][2]
+
+    def calculate_position(self, board, active_player, iteration=3):
+        copied_player = copy.deepcopy(board[0])
+        copied_field = copy.deepcopy(board[1])
+        player = active_player
+        if player == -1:
+            player = 0
+        actions = []
+        left_moves = False
+        for p in copied_player:
+            for i in p:
+                for j in i:
+                    if j < self.game.color_amount:
+                        left_moves = True
+        if iteration > 0 and left_moves:
+            for idx, row in enumerate(copied_field):
+                for jdx, position in enumerate(row):
+                    if position is not None:
+                        for kdx, color_list in enumerate(copied_player[player]):
+                            for ldx, figure_pos in enumerate(color_list):
+                                if figure_pos < self.game.color_amount:
+                                    for mdx, m in enumerate(self.game.get_active_positions([idx, jdx])):
+                                        for ndx, n in enumerate(m):
+                                            if n == 1 and not mdx == idx and not ndx == jdx:
+                                                new_copied_player = copy.deepcopy(copied_player)
+                                                new_copied_player[player][kdx][ldx] += 1
+                                                new_copied_field = copy.deepcopy(copied_field)
+                                                new_copied_field[mdx][ndx] = new_copied_field[idx][jdx]
+                                                new_copied_field[idx][jdx] = [kdx, ldx]
+                                                actions.append(self.calculate_position([new_copied_player, new_copied_field],
+                                                                                       -active_player, (iteration - 1)))
+            if active_player == -1:
+                max_val = min(actions)
+            else:
+                max_val = max(actions)
+        else:
+            game = WaldmeisterLogic(self.game.board_size, self.game.color_amount)
+            game.field = copied_field
+            max_val = game.count_points(1) - game.count_points(-1)
+        return max_val
 
     def action(self, position):
         if self.active_start and self.active_positions[position[0]][position[1]]:

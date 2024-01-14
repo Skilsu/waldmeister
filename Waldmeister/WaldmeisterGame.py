@@ -7,13 +7,12 @@ from Waldmeister.WaldmeisterLogic import WaldmeisterLogic
 
 log = logging.getLogger(__name__)
 
-BOARD_SIZE = 5
-COLOR_AMOUNT = 1
-
 
 class WaldmeisterGame(Game):
 
-    def __init__(self):
+    def __init__(self, board_size=5, color_amount=1):
+        self.board_size = board_size
+        self.color_amount = color_amount
         super().__init__()
 
     def getInitBoard(self):
@@ -22,7 +21,7 @@ class WaldmeisterGame(Game):
         :return: Tuple containing two np arrays -> (board_size x board_size x 9, 2 x 3 x 3)
         """
         # Initialize the board with zeros
-        init_board = np.zeros((BOARD_SIZE, BOARD_SIZE, 9), dtype=int)
+        init_board = np.zeros((self.board_size, self.board_size, 9), dtype=int)
 
         # Initialize figure counts for both players
         figure_counts = np.zeros((2, 3, 3), dtype=int)
@@ -34,10 +33,10 @@ class WaldmeisterGame(Game):
         Returns the necessary information about the size of both the board and the player's figures.
         :return: list of Integers: board_size, board_size, 9, 2, 3, 3
         """
-        return BOARD_SIZE, BOARD_SIZE, 9, 2, 3, 3
+        return self.board_size, self.board_size, 9, 2, 3, 3
 
     def getActionSize(self):
-        return (BOARD_SIZE * BOARD_SIZE * ((BOARD_SIZE - 1) * 3 + 1)) * 9 + 1  # no + 1???
+        return (self.board_size * self.board_size * ((self.board_size - 1) * 3 + 1)) * 9 + 1  # no + 1???
 
     def getNextState(self, board, player, action):
         """
@@ -49,36 +48,30 @@ class WaldmeisterGame(Game):
         """
         game = self.get_game(board)
 
-        if not 0 <= action <= BOARD_SIZE * BOARD_SIZE * 9 * ((BOARD_SIZE - 1) * 3 + 1) + 1:
+        if not 0 <= action <= self.board_size * self.board_size * 9 * ((self.board_size - 1) * 3 + 1) + 1:
             raise ValueError
 
         # + 1 logic... not really useful?
-        if action == BOARD_SIZE * BOARD_SIZE * 9 * ((BOARD_SIZE - 1) * 3 + 1) + 1:
+        if action == self.board_size * self.board_size * 9 * ((self.board_size - 1) * 3 + 1) + 1:
             # TODO +1 Needed????
             return board, -player
 
         starting_from, figure, moving = self.get_move_from_action(action, player)
 
-        if moving is not None and moving[1] > BOARD_SIZE - 1:
+        if moving is not None and moving[1] > self.board_size - 1:
             log.error(f"{starting_from=}, {figure=}, {moving=}, {action=}, {player=}")
 
         # execute move
-        try:
-            game.make_move(starting_from=starting_from, figure=figure, moving=moving, player=player)
-        except Exception as e:
-            self.display(board)
-            log.error(f"{starting_from=}, {figure=}, {moving=}, {action=}, {player=}")
-            self.get_move_from_action(action, player)
-            raise e
+        game.make_move(starting_from=starting_from, figure=figure, moving=moving, player=player)
 
         return self.return_np_format(game.field, game.player), -player
 
     def getValidMoves(self, board, player):
         game = self.get_game(board)
         value = int(game.empty_board())
-        total_moves = [value for _ in range(BOARD_SIZE ** 2)]
-        for i in range(BOARD_SIZE):
-            for j in range(BOARD_SIZE):
+        total_moves = [value for _ in range(self.board_size ** 2)]
+        for i in range(self.board_size):
+            for j in range(self.board_size):
                 total_moves.extend(game.get_legal_moves_for_position([i, j]))
 
         legal_figures = []
@@ -86,7 +79,7 @@ class WaldmeisterGame(Game):
             player = 0
         for i in game.player[player]:
             for j in i:
-                if j == COLOR_AMOUNT:
+                if j == self.color_amount:
                     legal_figures.append(0)
                 else:
                     legal_figures.append(1)
@@ -100,8 +93,9 @@ class WaldmeisterGame(Game):
                     total_moves_figures.append(0)
 
         total_moves_figures.append(0)
-        if len(total_moves_figures) != BOARD_SIZE * BOARD_SIZE * 9 * ((BOARD_SIZE - 1) * 3 + 1) + 1:
-            log.error(f"Len of total_moves_figures should be {BOARD_SIZE * BOARD_SIZE * 9 * ((BOARD_SIZE - 1) * 3 + 1) + 1} but is {len(total_moves_figures)}")
+        if len(total_moves_figures) != self.board_size * self.board_size * 9 * ((self.board_size - 1) * 3 + 1) + 1:
+            log.error(
+                f"Len of total_moves_figures should be {self.board_size * self.board_size * 9 * ((self.board_size - 1) * 3 + 1) + 1} but is {len(total_moves_figures)}")
             raise ValueError
         ones = list(filter(lambda x: x == 1, total_moves_figures))
         return total_moves_figures
@@ -132,15 +126,40 @@ class WaldmeisterGame(Game):
     def stringRepresentation(self, board):
         return self.get_game(board).get_str(player=1)
 
-    def display(self, board):
-        print(self.stringRepresentation(board))
-
     @staticmethod
-    def return_np_format(original_board, original_figures):
-        board = np.zeros((BOARD_SIZE, BOARD_SIZE, 9), dtype=int)
+    def display(board):
+        np_board, np_figures = board
+
+        board_size, _, num_figures = np_board.shape
+
+        original_format_board = [[None for _ in range(board_size)] for _ in range(board_size)]
+        original_format_figures = [[[0 for _ in range(3)] for _ in range(3)] for _ in range(2)]
+
+        for i in range(board_size):
+            for j in range(board_size):
+                for k in range(num_figures):
+                    if np_board[i, j, k] != 0:
+                        # Extract color and size from the figure index
+                        color = k // 3
+                        size = k % 3
+                        original_format_board[i][j] = [color, size]
+                        break
+
+        for i in range(2):
+            for j in range(3):
+                for k in range(3):
+                    original_format_figures[i][j][k] = int(np_figures[i, j, k])
+
+        game = WaldmeisterLogic(board_size=5, color_amount=1)
+        game.field = original_format_board
+        game.player = original_format_figures
+        print(game.get_str(player=1))
+
+    def return_np_format(self, original_board, original_figures):
+        board = np.zeros((self.board_size, self.board_size, 9), dtype=int)
         figures = np.zeros((2, 3, 3), dtype=int)
-        for i in range(BOARD_SIZE):
-            for j in range(BOARD_SIZE):
+        for i in range(self.board_size):
+            for j in range(self.board_size):
                 if original_board[i][j] is not None:
                     color, size = original_board[i][j]
                     figure_index = color * 3 + size
@@ -151,8 +170,7 @@ class WaldmeisterGame(Game):
                     figures[i, j, k] = original_figures[i][j][k]
         return board, figures
 
-    @staticmethod
-    def get_move_from_action(action, player):
+    def get_move_from_action(self, action, player):
         # calculation of figure
         color = action % 9
         action = int(action / 9)
@@ -165,18 +183,18 @@ class WaldmeisterGame(Game):
 
         # calculating move
         moving = None
-        if action >= BOARD_SIZE ** 2:
-            action = action - BOARD_SIZE ** 2
-            raw_move = action % ((BOARD_SIZE - 1) * 3)
-            move_direction = int(raw_move / (BOARD_SIZE - 1))
-            move_distance = raw_move % (BOARD_SIZE - 1)
+        if action >= self.board_size ** 2:
+            action = action - self.board_size ** 2
+            raw_move = action % ((self.board_size - 1) * 3)
+            move_direction = int(raw_move / (self.board_size - 1))
+            move_distance = raw_move % (self.board_size - 1)
             moving = [move_direction, move_distance]
-            action = int(action / ((BOARD_SIZE - 1) * 3))
+            action = int(action / ((self.board_size - 1) * 3))
 
         # calculation of starting position
-        y = int(action) % BOARD_SIZE
+        y = int(action) % self.board_size
         x = action - y
-        x = int(x / BOARD_SIZE)
+        x = int(x / self.board_size)
 
         log.debug(f"starting_from=[{x}, {y}], {figure=}, {moving=}, {action=}, {color=}, {x=}, {y=}")
         return [x, y], figure, moving
@@ -184,7 +202,7 @@ class WaldmeisterGame(Game):
     def get_game(self, board):
         original_board, original_figures = self.convert_to_original_format(board)
 
-        game = WaldmeisterLogic(BOARD_SIZE, COLOR_AMOUNT)
+        game = WaldmeisterLogic(self.board_size, self.color_amount)
         game.field = original_board
         game.player = original_figures
         return game

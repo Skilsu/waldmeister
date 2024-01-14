@@ -43,7 +43,6 @@ class NNetWrapper(NeuralNet):
         target_vs = np.asarray(target_vs)
         self.nnet.model.fit(x=[input_list_1, input_list_2], y=[target_pis, target_vs], batch_size=args.batch_size,
                             epochs=args.epochs)
-        print("train worked")
 
     def predict(self, board):
         """
@@ -81,6 +80,8 @@ class NNetWrapper(NeuralNet):
         # https://github.com/pytorch/examples/blob/master/imagenet/main.py#L98
         filepath = os.path.join(folder, filename)
         if not os.path.exists(filepath):
-            raise ("No model in path {}".format(filepath))
+            e = Exception()
+            e.add_note("No model in path {}".format(filepath))
+            raise e
 
         self.nnet.model.load_weights(filepath)
