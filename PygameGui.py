@@ -1,7 +1,7 @@
 import copy
 import logging
 import math
-import threading
+import random
 
 import pygame
 from Waldmeister.WaldmeisterGame import WaldmeisterGame
@@ -72,6 +72,7 @@ class PygameWaldmeisterGUI:
         if not ai_lambdas:
             self.no_ai = True
         ai_types.append("Alpha Beta")
+        ai_types.append("Random")
         return ai_types, ai_lambdas
 
     def handle_resize_event(self, event):
@@ -778,6 +779,8 @@ class PygameWaldmeisterGUI:
         moving_to = None
         moving = None
         if chosen_ai == len(self.ai_types) - 1:
+            starting_from, figure, moving_to = self.random_player()
+        elif chosen_ai == len(self.ai_types) - 2:
             starting_from, figure, moving_to = self.alpha_beta()
         else:
             action = self.ai_lambdas[chosen_ai](self.game_ai.getCanonicalForm(board, self.active_player))
@@ -796,10 +799,46 @@ class PygameWaldmeisterGUI:
                             player=self.active_player,
                             moving_to=moving_to)
 
+    def random_player(self):
+        if self.game.empty_board():
+            return [random.randint(0, self.game.board_size - 1), random.randint(0, self.game.board_size - 1)], [
+                random.randint(0, 2), random.randint(0, 2)], None
+
+        non_empty_positions = []
+        for i in range(self.game.board_size):
+            for j in range(self.game.board_size):
+                if self.game.field[i][j] is not None:
+                    non_empty_positions.append([i, j])
+        starting_position = random.choice(non_empty_positions)
+
+        available_colors = []
+        player = self.active_player
+        if player == -1:
+            player = 0
+        for i in range(3):
+            for j in range(3):
+                if self.game.player[player][i][j] < self.game.color_amount:
+                    available_colors.append([i, j])
+
+        available_actives = []
+        active_positions = self.game.get_active_positions(starting_position)
+        for i in range(self.game.board_size):
+            for j in range(self.game.board_size):
+                if active_positions[i][j] == 1:
+                    available_actives.append([i, j])
+
+        return starting_position, random.choice(available_colors), random.choice(available_actives)
+
     def alpha_beta(self):
         player = self.active_player
         if player == -1:
             player = 0
+        if self.active_player == -1:
+            val = float('-inf')
+        else:
+            val = float('inf')
+        alpha = float('-inf')
+        beta = float('inf')
         if self.game.empty_board():
             actions = []
             values = []
@@ -813,10 +852,22 @@ class PygameWaldmeisterGUI:
                                 copied_field = copy.deepcopy(self.game.field)
                                 copied_field[idx][jdx] = [kdx, ldx]
                                 values.append([[idx, jdx], [kdx, ldx], None])
-                                actions.append(self.calculate_position([copied_player, copied_field],
-                                                                       -self.active_player, 1))
-            max_val = max(actions)
-            max_index = actions.index(max_val)
+                                eval = self.calculate_position([copied_player, copied_field],
+                                                               -self.active_player,
+                                                               alpha, beta, 1)
+                                actions.append(eval)
+                                if self.active_player == -1:
+                                    val = max(val, eval)
+                                    alpha = max(alpha, eval)
+                                    if beta <= alpha:
+                                        return [idx, jdx], [kdx, ldx], None
+                                else:
+                                    val = min(val, eval)
+                                    beta = min(beta, eval)
+                                    if beta <= alpha:
+                                        return [idx, jdx], [kdx, ldx], None
+
+            max_index = actions.index(val)
         else:
             actions = []
             values = []
@@ -835,19 +886,36 @@ class PygameWaldmeisterGUI:
                                                 copied_field[mdx][ndx] = copied_field[idx][jdx]
                                                 copied_field[idx][jdx] = [kdx, ldx]
                                                 values.append([[idx, jdx], [kdx, ldx], [mdx, ndx]])
-                                                actions.append(self.calculate_position([copied_player, copied_field],
-                                                                                       -self.active_player, 1))
-            max_val = max(actions)
-            max_index = actions.index(max_val)
+                                                eval = self.calculate_position([copied_player, copied_field],
+                                                                               -self.active_player,
+                                                                               alpha, beta, 1)
+                                                actions.append(eval)
+                                                if self.active_player == -1:
+                                                    val = max(val, eval)
+                                                    alpha = max(alpha, eval)
+                                                    if beta <= alpha:
+                                                        return [idx, jdx], [kdx, ldx], [mdx, ndx]
+                                                else:
+                                                    val = min(val, eval)
+                                                    beta = min(beta, eval)
+                                                    if beta <= alpha:
+                                                        return [idx, jdx], [kdx, ldx], [mdx, ndx]
+            max_index = actions.index(val)
         return values[max_index][0], values[max_index][1], values[max_index][2]
 
-    def calculate_position(self, board, active_player, iteration=3):
+    def calculate_position(self, board, active_player, alpha, beta, iteration=3):
         copied_player = copy.deepcopy(board[0])
         copied_field = copy.deepcopy(board[1])
+        game = WaldmeisterLogic(self.game.board_size, self.game.color_amount)
+        game.field = copied_field
+        game.player = copied_player
         player = active_player
         if player == -1:
             player = 0
-        actions = []
+        if active_player == -1:
+            val = float('-inf')
+        else:
+            val = float('inf')
         left_moves = False
         for p in copied_player:
             for i in p:
@@ -861,25 +929,31 @@ class PygameWaldmeisterGUI:
                         for kdx, color_list in enumerate(copied_player[player]):
                             for ldx, figure_pos in enumerate(color_list):
                                 if figure_pos < self.game.color_amount:
-                                    for mdx, m in enumerate(self.game.get_active_positions([idx, jdx])):
+                                    active_positions = game.get_active_positions([idx, jdx])
+                                    for mdx, m in enumerate(active_positions):
                                         for ndx, n in enumerate(m):
-                                            if n == 1 and not mdx == idx and not ndx == jdx:
+                                            if n == 1 and not (mdx == idx and ndx == jdx):
                                                 new_copied_player = copy.deepcopy(copied_player)
                                                 new_copied_player[player][kdx][ldx] += 1
                                                 new_copied_field = copy.deepcopy(copied_field)
                                                 new_copied_field[mdx][ndx] = new_copied_field[idx][jdx]
                                                 new_copied_field[idx][jdx] = [kdx, ldx]
-                                                actions.append(self.calculate_position([new_copied_player, new_copied_field],
-                                                                                       -active_player, (iteration - 1)))
-            if active_player == -1:
-                max_val = min(actions)
-            else:
-                max_val = max(actions)
+                                                eval = self.calculate_position([new_copied_player, new_copied_field],
+                                                                               -active_player,
+                                                                               alpha, beta, (iteration - 1))
+                                                if active_player == -1:
+                                                    val = max(val, eval)
+                                                    alpha = max(alpha, eval)
+                                                    if beta <= alpha:
+                                                        return eval
+                                                else:
+                                                    val = min(val, eval)
+                                                    beta = min(beta, eval)
+                                                    if beta <= alpha:
+                                                        return eval
         else:
-            game = WaldmeisterLogic(self.game.board_size, self.game.color_amount)
-            game.field = copied_field
-            max_val = game.count_points(1) - game.count_points(-1)
-        return max_val
+            val = game.count_points(1) - game.count_points(-1)
+        return val
 
     def action(self, position):
         if self.active_start and self.active_positions[position[0]][position[1]]:
@@ -897,6 +971,6 @@ class PygameWaldmeisterGUI:
 
 
 if __name__ == "__main__":
-    game = WaldmeisterLogic(board_size=5)
+    game = WaldmeisterLogic(board_size=8, color_amount=3)
     gui = PygameWaldmeisterGUI(game=game)
     gui.run_game()
