@@ -1,3 +1,4 @@
+import logging
 import os
 import sys
 import time
@@ -8,6 +9,8 @@ from utils import *
 from NeuralNet import NeuralNet
 
 from .WaldmeisterNNet import WaldmeisterNNet as wnnet
+
+log = logging.getLogger(__name__)
 
 sys.path.append('../..')
 
@@ -67,10 +70,10 @@ class NNetWrapper(NeuralNet):
 
         filepath = os.path.join(folder, filename)
         if not os.path.exists(folder):
-            print("Checkpoint Directory does not exist! Making directory {}".format(folder))
+            log.warning(f"Checkpoint Directory does not exist! Making directory {folder}")
             os.mkdir(folder)
         else:
-            print("Checkpoint Directory exists! ")
+            log.info("Checkpoint Directory exists!")
         self.nnet.model.save_weights(filepath)
 
     def load_checkpoint(self, folder='checkpoint', filename='checkpoint.pth.tar'):
@@ -81,7 +84,7 @@ class NNetWrapper(NeuralNet):
         filepath = os.path.join(folder, filename)
         if not os.path.exists(filepath):
             e = Exception()
-            e.add_note("No model in path {}".format(filepath))
+            e.add_note(f"No model in path {filepath}")
             raise e
 
         self.nnet.model.load_weights(filepath)

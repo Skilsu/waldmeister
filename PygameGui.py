@@ -69,8 +69,8 @@ class PygameWaldmeisterGUI:
             for model in MODELS[self.game.board_size - 5]:
                 ai_types.append(model[0])
                 ai_lambdas.append(AiWaldmeisterPlayer(self.game_ai, model[1]).play)
-        if not ai_lambdas:
-            self.no_ai = True
+        """if not ai_lambdas:  # if no Alpha beta or random
+            self.no_ai = True"""
         ai_types.append("Alpha Beta")
         ai_types.append("Random")
         return ai_types, ai_lambdas
@@ -119,10 +119,10 @@ class PygameWaldmeisterGUI:
         self.screen.blit(text_surface, text_rect)
 
     def symbol_toggle(self):
-        self._toggle(self.window_width, 0, ["Sticks", "Symbols"], not self.symbol)  # not bc aesthetics
+        self._toggle(self.window_width, 0, ["Symbols", "Sticks"], not self.symbol)  # not bc aesthetics
 
     def color_toggle(self):
-        self._toggle(self.window_width, 100, ["Default", "Colored"], self.color_scheme)
+        self._toggle(self.window_width, 100, ["Colored", "Default"], self.color_scheme)
 
     def ai_toggle(self):
         self._toggle(175, 0, ["Human", "Ai"], self.ai)
@@ -758,11 +758,11 @@ class PygameWaldmeisterGUI:
                 self.active_start = None
                 self.active_end = None
                 self.chosen_color = [None for _ in range(3)]
-            if self.ai and self.auto_play and self.winner == 0:
+            if (self.ai and self.auto_play and self.winner == 0 and
+                    (self.mirror and self.active_player == 1 or not self.mirror and self.active_player == -1)):
                 self.draw_board()
                 self.handle_event()
                 self.winner = self.game.winner()
-                self.active_player = -self.active_player
                 if self.winner == 0:
                     self.proceed_action()
 
@@ -833,7 +833,7 @@ class PygameWaldmeisterGUI:
         player = self.active_player
         if player == -1:
             player = 0
-        if self.active_player == -1:
+        if self.active_player == 1:
             val = float('-inf')
         else:
             val = float('inf')
@@ -856,7 +856,7 @@ class PygameWaldmeisterGUI:
                                                                -self.active_player,
                                                                alpha, beta, 1)
                                 actions.append(eval)
-                                if self.active_player == -1:
+                                if self.active_player == 1:
                                     val = max(val, eval)
                                     alpha = max(alpha, eval)
                                     if beta <= alpha:
@@ -890,7 +890,7 @@ class PygameWaldmeisterGUI:
                                                                                -self.active_player,
                                                                                alpha, beta, 1)
                                                 actions.append(eval)
-                                                if self.active_player == -1:
+                                                if self.active_player == 1:
                                                     val = max(val, eval)
                                                     alpha = max(alpha, eval)
                                                     if beta <= alpha:
@@ -912,7 +912,7 @@ class PygameWaldmeisterGUI:
         player = active_player
         if player == -1:
             player = 0
-        if active_player == -1:
+        if active_player == 1:
             val = float('-inf')
         else:
             val = float('inf')
@@ -941,7 +941,7 @@ class PygameWaldmeisterGUI:
                                                 eval = self.calculate_position([new_copied_player, new_copied_field],
                                                                                -active_player,
                                                                                alpha, beta, (iteration - 1))
-                                                if active_player == -1:
+                                                if active_player == 1:
                                                     val = max(val, eval)
                                                     alpha = max(alpha, eval)
                                                     if beta <= alpha:

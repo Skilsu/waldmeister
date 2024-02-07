@@ -27,7 +27,6 @@ class WaldmeisterLogic:
         self.player = [[[0 for _ in range(3)] for _ in range(3)] for _ in range(2)]
         self.field = [[None for _ in range(board_size)] for _ in range(board_size)]
 
-    # add [][] indexer syntax to the Board
     def __getitem__(self, index):
         return self.field[index]
 
@@ -359,7 +358,8 @@ class WaldmeisterLogic:
                             (i < self.board_size - 1 and evaluated_pattern[i + 1][j] == 1) or
                             (j > 0 and evaluated_pattern[i][j - 1] == 1) or
                             (j < self.board_size - 1 and evaluated_pattern[i][j + 1] == 1) or
-                            (i > 0 and self.board_size - 1 > j and evaluated_pattern[i - 1][j + 1] == 1)):
+                            (i > 0 and self.board_size - 1 > j and evaluated_pattern[i - 1][j + 1] == 1) or
+                            (j > 0 and self.board_size - 1 > i and evaluated_pattern[i + 1][j - 1] == 1)):
                         evaluated_row.append(1)
                     else:
                         if [i, j] != position:
@@ -372,8 +372,17 @@ class WaldmeisterLogic:
 
 
 if __name__ == "__main__":
-    game = WaldmeisterLogic(5)
-    game.make_move([2, 4], [0, 0], -1)
-    game.make_move([2, 4], [2, 1], -1, moving=[2, 1])
-    print(game.get_str(1))
-    print(game.get_legal_moves_for_position([1, 2]))
+    game = WaldmeisterLogic(8)
+    board = [[0, 0, 0, 0, 0, 0, 0, 0],
+             [0, 0, 0, 0, 0, 0, 0, 0],
+             [1, 0, 0, 0, 1, 0, 0, 0],
+             [1, 0, 0, 1, 1, 0, 0, 0],
+             [1, 0, 1, 0, 1, 0, 0, 0],
+             [1, 1, 1, 0, 0, 0, 0, 0],
+             [1, 0, 0, 0, 0, 0, 0, 0],
+             [0, 0, 0, 0, 0, 0, 0, 0]]
+    boards = game.evaluate_boards(board)
+    for b in boards:
+        for idx, c in enumerate(b):
+            print(idx, c)
+        print()

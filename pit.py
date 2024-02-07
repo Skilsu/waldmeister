@@ -16,12 +16,14 @@ human_vs_cpu = False
 
 g = WaldmeisterGame()
 
+filename_1 = 'model_1.h5'  # TODO name needs to be adjusted
+filename_2 = 'model_2.h5'  # TODO name needs to be adjusted
 
 # nnet players
-n1p = AiWaldmeisterPlayer(g, 'best_nico_5.h5').play
+n1p = AiWaldmeisterPlayer(g, filename_1).play
 
 n2 = NNet(g)
-n2.load_checkpoint('./pretrained_models/Waldmeister/pytorch/', 'best_nico_5.h5')
+n2.load_checkpoint('./pretrained_models/Waldmeister/pytorch/', filename_2)
 args2 = dotdict({'numMCTSSims': 50, 'cpuct': 1.0})
 mcts2 = MCTS(g, n2, args2)
 n2p = lambda x: np.argmax(mcts2.getActionProb(x, temp=0))
