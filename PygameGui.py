@@ -10,10 +10,10 @@ from Waldmeister.WaldmeisterPlayers import AiWaldmeisterPlayer
 
 log = logging.getLogger(__name__)
 
-MODELS = [[["Easy", "best_nico_5.h5"], ["Difficult", "best_abdul_5.h5"]],
+MODELS = [[],
           [],
           [],
-          [["Easy", "checkpoint_4_abdul_8.h5"], ["Difficult", "best_abdul_8.h5"]]]
+          [["Model", "best_model_8x8.h5"]]]
 
 
 class PygameWaldmeisterGUI:
