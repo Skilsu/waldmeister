@@ -15,7 +15,7 @@ Install the required dependencies:
 ```
 pip install -r requirements.txt
 ```
-Download the pretrained models from the provided [Google Drive link](https://drive.google.com/drive/folders/16oEcaHV_uyx0HnVO-ZLlJV0Is7M6f11o?usp=sharing) or train them by yourself ('Train a Model') and place them in the ```pretrained_models/Waldmeister/pytorch``` directory. 
+Download the pretrained model from the provided [Google Drive link](https://drive.google.com/drive/folders/16oEcaHV_uyx0HnVO-ZLlJV0Is7M6f11o?usp=sharing) or train them by yourself ('Train a Model') and place them in the ```pretrained_models/Waldmeister/pytorch``` directory. 
 
 (Link long version: https://drive.google.com/drive/folders/16oEcaHV_uyx0HnVO-ZLlJV0Is7M6f11o?usp=sharing )
 
