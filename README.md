@@ -1,47 +1,61 @@
-# Alpha Zero General (any game, any framework!)
+# Alpha Zero General for Waldmeister
+This repository showcases my implementation of the game Waldmeister, complete with its logic and an AI implementation utilizing the AlphaZero algorithm, inspired by the principles outlined in the [AlphaGo Zero paper (Silver et al)](https://github.com/suragnair/alpha-zero-general/raw/master/pretrained_models/writeup.pdf). The framework is based on the [AlphaZero framework](https://github.com/suragnair/alpha-zero-general). It offers a flexible environment for training models, enabeling competitions between different AI agents and interactive gameplay. These features make it a valuable resource for experimentation and exploration of the game Waldmeister.
 
-A simplified, highly flexible, commented and (hopefully) easy to understand implementation of self-play based reinforcement learning based on the AlphaGo Zero paper (Silver et al). It is designed to be easy to adopt for any two-player turn-based adversarial game and any deep learning framework of your choice. A sample implementation has been provided for the game of Othello in PyTorch, Keras, TensorFlow and Chainer. An accompanying tutorial can be found [here](http://web.stanford.edu/~surag/posts/alphazero.html). We also have implementations for GoBang and TicTacToe.
 
-To use a game of your choice, subclass the classes in ```Game.py``` and ```NeuralNet.py``` and implement their functions. Example implementations for Othello can be found in ```othello/OthelloGame.py``` and ```othello/{pytorch,keras,tensorflow,chainer}/NNet.py```. 
+## Installation
+Create a virtual environment (optional but recommended):
+```
+# example for windows
+pip install virtualenv
+virtualenv venv
+. .\venv\Scripts\activate
+```
 
-```Coach.py``` contains the core training loop and ```MCTS.py``` performs the Monte Carlo Tree Search. The parameters for the self-play can be specified in ```main.py```. Additional neural network parameters are in ```othello/{pytorch,keras,tensorflow,chainer}/NNet.py``` (cuda flag, batch size, epochs, learning rate etc.). 
+Install the required dependencies:
+```
+pip install -r requirements.txt
+```
+Download the pretrained models from the provided Google Drive link or train them by yourself ('Train a Model') and place them in the ```pretrained_models/Waldmeister/pytorch``` directory.
 
-To start training a model for Othello:
-```bash
+## Usage
+### Training a Model
+To train a model for Waldmeister, use ```main.py```. This script initiates the training loop, allowing the model to learn from self-play:
+```
 python main.py
 ```
-Choose your framework and game in ```main.py```.
+You can customize various training parameters inside ```main.py```, such as the number of training iterations, episodes per iteration, and Monte Carlo Tree Search (MCTS) simulations per turn. Additionally, you can adjust neural network parameters like batch size, epochs, and learning rate within the ```Waldmeister/keras/NNet.py``` file.
 
-### Docker Installation
-For easy environment setup, we can use [nvidia-docker](https://github.com/NVIDIA/nvidia-docker). Once you have nvidia-docker set up, we can then simply run:
+If you want to use the best trained model in the other parts of the Repository you need to copy the ```temp/best.h5``` to the ```pretrained_models/Waldmeister/pytorch``` directory and give it a desired filename.
+
+
+### Competition
+You can use ```pit.py``` to let two player implementations (```Waldmeister/WaldmeisterPlayers.py``` or models compete against each other. This script enabels evaluating the performance of different models against each other. You can modify this script to adjust the competition settings, such as the number of games to play and the opponents' configurations.
+
+The models used in this file need to exist in the ```pretrained_models/Waldmeister/pytorch``` directory.
+
+
+### Playing with GUI
+```PygameGui.py``` provides a graphical user interface to play the game Waldmeister. This interface allows interactive gameplay, where you can engage with different opponents in a visually appealing environment. You can choose to play against human players, saved models, a random agent, or an alpha-beta implementation, providing a versatile platform for testing and enjoyment. In addidion you can let each of these players play against each of them by themselves.
+
+To play with a certain model in the gui the mane of the model needs to be included in the ```MODELS``` variables (sorted by boardsize) as well as the filename of the stored model in the ```pretrained_models/Waldmeister/pytorch``` directory (```["name", "filename"]```).
+Example:
 ```
-./setup_env.sh
-```
-to set up a (default: pyTorch) Jupyter docker container. We can now open a new terminal and enter:
-```
-docker exec -ti pytorch_notebook python main.py
+MODELS = [[["Easy", "easy5x5.h5"], ["Difficult", "difficult5x5.h5"]], # first entry in Models for  boardsize 5x5
+          [],                                                         # second entry in Models for  boardsize 6x6
+          [],                                                         # third entry in Models for  boardsize 7x7
+          [["Easy", "easy8x8.h5"], ["Difficult", "difficult8x8.h5"]]] # fourth entry in Models for  boardsize 8x8
+# MODELS is expandable and the gui loads automatically all includet models
 ```
 
-### Experiments
-We trained a PyTorch model for 6x6 Othello (~80 iterations, 100 episodes per iteration and 25 MCTS simulations per turn). This took about 3 days on an NVIDIA Tesla K80. The pretrained model (PyTorch) can be found in ```pretrained_models/othello/pytorch/```. You can play a game against it using ```pit.py```. Below is the performance of the model against a random and a greedy baseline with the number of iterations.
-![alt tag](https://github.com/suragnair/alpha-zero-general/raw/master/pretrained_models/6x6.png)
-
-A concise description of our algorithm can be found [here](https://github.com/suragnair/alpha-zero-general/raw/master/pretrained_models/writeup.pdf).
 
 ### Contributing
 While the current code is fairly functional, we could benefit from the following contributions:
-* Game logic files for more games that follow the specifications in ```Game.py```, along with their neural networks
-* Neural networks in other frameworks
-* Pre-trained models for different game configurations
-* An asynchronous version of the code- parallel processes for self-play, neural net training and model comparison. 
-* Asynchronous MCTS as described in the paper
+* threading to make the PygameGui klickable while the model or AlphaBeta algortihm is calculating
+* training better models with other params as described in 'Training a Model'
+
 
 ### Contributors and Credits
 * [Shantanu Thakoor](https://github.com/ShantanuThakoor) and [Megha Jhunjhunwala](https://github.com/jjw-megha) helped with core design and implementation.
-* [Shantanu Kumar](https://github.com/SourKream) contributed TensorFlow and Keras models for Othello.
+* [Abdülkerim Kilinc](https://github.com/AbdulkerimKilinc) and [Nicolas Henrich](https://github.com/Skilsu) contributed rules, gui and a trained model for Waldmeister.
 * [Evgeny Tyurin](https://github.com/evg-tyurin) contributed rules and a trained model for TicTacToe.
-* [MBoss](https://github.com/1424667164) contributed rules and a model for GoBang.
-* [Jernej Habjan](https://github.com/JernejHabjan) contributed RTS game.
-* [Adam Lawson](https://github.com/goshawk22) contributed rules and a trained model for 3D TicTacToe.
-* [Carlos Aguayo](https://github.com/carlos-aguayo) contributed rules and a trained model for Dots and Boxes along with a [JavaScript implementation](https://github.com/carlos-aguayo/carlos-aguayo.github.io/tree/master/alphazero).
 
