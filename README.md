@@ -58,6 +58,6 @@ While the current code is fairly functional, we could benefit from the following
 
 ### Contributors and Credits
 * [Shantanu Thakoor](https://github.com/ShantanuThakoor) and [Megha Jhunjhunwala](https://github.com/jjw-megha) helped with core design and implementation.
-* [Abdülkerim Kilinc](https://github.com/AbdulkerimKilinc) and [Nicolas Henrich](https://github.com/Skilsu) contributed rules, gui and a trained model for Waldmeister.
+* [Abdülkerim Kilinc](https://github.com/AbdulkerimKilinc) and [Nicolas Henrich](https://github.com/Skilsu) contributed rules, gui and a trained model for Waldmeister using pair programming.
 * [Evgeny Tyurin](https://github.com/evg-tyurin) contributed rules and a trained model for TicTacToe.
 
